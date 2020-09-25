@@ -40,7 +40,7 @@ snakemake \
 --partition=savio \
 --account=co_rosalind \
 --qos=rosalind_savio_normal \
---nodes={resources.nodes}
+--nodes={resources.nodes} \
 --cpus-per-task={threads} \
 --mem={resources.mem_gb}000 \
 -l walltime=72:00:00 \
