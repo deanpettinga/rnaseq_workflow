@@ -111,58 +111,58 @@ rule mergeLanesAndRename_PE:
     envmodules:  "bbc/R/R-3.6.0"
     script:      "bin/mergeLanesAndRename.R"
 
-def fastq_screen_input(wildcards):
-    if config["PE_or_SE"] == "SE":
-        reads = "raw_data/{sample}-SE.fastq.gz".format(**wildcards)
-        return reads
-    elif config["PE_or_SE"] == "PE":
-        R1 =    "raw_data/{sample}-R1.fastq.gz".format(**wildcards)
-        R2 =    "raw_data/{sample}-R2.fastq.gz".format(**wildcards)
-        return [R1,R2]
-
-rule fastq_screen_PE:
-    input:
-        R1 =      "raw_data/{sample}-R1.fastq.gz",
-        R2 =      "raw_data/{sample}-R2.fastq.gz",
-    output:
-        R1_html = "analysis/fastq_screen/{sample}-R1_screen.html",
-        R1_txt =  "analysis/fastq_screen/{sample}-R1_screen.txt",
-        R2_html = "analysis/fastq_screen/{sample}-R2_screen.html",
-        R2_txt =  "analysis/fastq_screen/{sample}-R2_screen.txt",
-    log:
-        R1 =      "logs/fastq_screen/fastq_screen.{sample}-R1.log",
-        R2 =      "logs/fastq_screen/fastq_screen.{sample}-R2.log",
-    benchmark:    "benchmarks/fastq_screen/{sample}.bmk"
-    threads: 8
-    resources:
-        nodes =   1,
-        mem_gb =  64,
-    envmodules:   "bbc/fastq_screen/fastq_screen-0.14.0"
-    shell:
-        """
-        fastq_screen --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
-        fastq_screen --outdir analysis/fastq_screen/ {input.R2} 2> {log.R2}
-        """
-
-rule fastq_screen_SE:
-    input:
-                    "raw_data/{sample}-SE.fastq.gz",
-    output:
-        html =      "analysis/fastq_screen/{sample}-SE_screen.html",
-        txt =       "analysis/fastq_screen/{sample}-SE_screen.txt",
-    log:
-                    "logs/fastq_screen/fastq_screen.{sample}-SE.log",
-    benchmark:
-                    "benchmarks/fastq_screen/fastq_screen.{sample}.bmk"
-    threads: 8
-    resources:
-        nodes =     1,
-        mem_gb =    64,
-    envmodules:     "bbc/fastq_screen/fastq_screen-0.14.0"
-    shell:
-        """
-        fastq_screen --outdir analysis/fastq_screen/ {input} 2> {log.R1}
-        """
+# def fastq_screen_input(wildcards):
+#     if config["PE_or_SE"] == "SE":
+#         reads = "raw_data/{sample}-SE.fastq.gz".format(**wildcards)
+#         return reads
+#     elif config["PE_or_SE"] == "PE":
+#         R1 =    "raw_data/{sample}-R1.fastq.gz".format(**wildcards)
+#         R2 =    "raw_data/{sample}-R2.fastq.gz".format(**wildcards)
+#         return [R1,R2]
+#
+# rule fastq_screen_PE:
+#     input:
+#         R1 =      "raw_data/{sample}-R1.fastq.gz",
+#         R2 =      "raw_data/{sample}-R2.fastq.gz",
+#     output:
+#         R1_html = "analysis/fastq_screen/{sample}-R1_screen.html",
+#         R1_txt =  "analysis/fastq_screen/{sample}-R1_screen.txt",
+#         R2_html = "analysis/fastq_screen/{sample}-R2_screen.html",
+#         R2_txt =  "analysis/fastq_screen/{sample}-R2_screen.txt",
+#     log:
+#         R1 =      "logs/fastq_screen/fastq_screen.{sample}-R1.log",
+#         R2 =      "logs/fastq_screen/fastq_screen.{sample}-R2.log",
+#     benchmark:    "benchmarks/fastq_screen/{sample}.bmk"
+#     threads: 8
+#     resources:
+#         nodes =   1,
+#         mem_gb =  64,
+#     envmodules:   "bbc/fastq_screen/fastq_screen-0.14.0"
+#     shell:
+#         """
+#         fastq_screen --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
+#         fastq_screen --outdir analysis/fastq_screen/ {input.R2} 2> {log.R2}
+#         """
+#
+# rule fastq_screen_SE:
+#     input:
+#                     "raw_data/{sample}-SE.fastq.gz",
+#     output:
+#         html =      "analysis/fastq_screen/{sample}-SE_screen.html",
+#         txt =       "analysis/fastq_screen/{sample}-SE_screen.txt",
+#     log:
+#                     "logs/fastq_screen/fastq_screen.{sample}-SE.log",
+#     benchmark:
+#                     "benchmarks/fastq_screen/fastq_screen.{sample}.bmk"
+#     threads: 8
+#     resources:
+#         nodes =     1,
+#         mem_gb =    64,
+#     envmodules:     "bbc/fastq_screen/fastq_screen-0.14.0"
+#     shell:
+#         """
+#         fastq_screen --outdir analysis/fastq_screen/ {input} 2> {log.R1}
+#         """
 
 def trim_galore_input(wildcards):
     if config["PE_or_SE"] == "SE":
@@ -297,13 +297,13 @@ rule STAR:
 
 multiqc_input = []
 if config["PE_or_SE"] =="SE":
-    multiqc_input.append(expand("analysis/fastq_screen/{units.sample}-SE_screen.txt", units=units.itertuples()))
+    # multiqc_input.append(expand("analysis/fastq_screen/{units.sample}-SE_screen.txt", units=units.itertuples()))
     multiqc_input.append(expand("analysis/trimmed_data/{units.sample}-SE_trimmed.fq.gz", units=units.itertuples()))
     multiqc_input.append(expand("analysis/trimmed_data/{units.sample}-SE_trimmed_fastqc.zip", units=units.itertuples()))
     multiqc_input.append(expand("analysis/trimmed_data/{units.sample}-SE_trimmed_fastqc.html", units=units.itertuples()))
     multiqc_input.append(expand("analysis/star/{units.sample}.Log.final.out", units=units.itertuples()))
 elif config["PE_or_SE"] =="PE":
-    multiqc_input.append(expand("analysis/fastq_screen/{units.sample}-R{read}_screen.txt", units=units.itertuples(), read=["1","2"]))
+    # multiqc_input.append(expand("analysis/fastq_screen/{units.sample}-R{read}_screen.txt", units=units.itertuples(), read=["1","2"]))
     multiqc_input.append(expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}.fq.gz", units=units.itertuples(), read=["1","2"]))
     multiqc_input.append(expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", units=units.itertuples(), read=["1","2"]))
     multiqc_input.append(expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", units=units.itertuples(), read=["1","2"]))
@@ -316,7 +316,7 @@ rule multiqc:
     params:
         "analysis/star/",
         "analysis/trimmed_data/",
-        "analysis/fastq_screen/",
+        # "analysis/fastq_screen/",
     output:
         "analysis/multiqc/multiqc_report.html",
         "analysis/multiqc/multiqc_report_data/multiqc.log",
