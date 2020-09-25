@@ -42,6 +42,8 @@ if config["call_variants"]:
 
     assert contig_groups_flattened == fai_pd.iloc[:,0].values.tolist(), "Chromosomes in .fai do not match those in 'grouped_contigs.tsv'."
 
+print units["arikara_leaf_1"]
+
 ##### target rules #####
 
 rule all:
@@ -55,8 +57,8 @@ rule all:
             # SE
         # expand("raw_data/{units.sample}-SE.fastq.gz", units=units.itertuples()),
             # PE
-        expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
-        expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+        # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        # expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),
         # fastq_screen
             # PE
         # expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
@@ -81,7 +83,7 @@ rule all:
         # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
         # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
-        # "analysis/multiqc/multiqc_report.html",
+        "analysis/multiqc/multiqc_report.html",
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -92,7 +94,7 @@ rule mergeLanesAndRename_SE:
     log:         "logs/mergeLanesAndRename/mergeLanesAndRename_SE-{sample}.log"
                  "logs/mergeLanesAndRename/mergeLanesAndRename_PE-{sample}.log"
     resources:
-        threads = 1,
+        threads=  1,
         nodes =   1,
         mem_gb =  16,
     conda:       "envs/R.yaml"
@@ -195,16 +197,16 @@ rule trim_galore_PE:
     conda:
         "envs/trim-galore.yaml"
     resources:
-        threads = 20,
+        threads = 4,
         nodes =   1,
-        mem_gb =  64,
+        mem_gb =  80,
     shell:
         """
         trim_galore \
         --paired \
         {input} \
         --output_dir {params.outdir} \
-        --cores {resources.threads} \
+        --cores {threads} \
         -q 20 \
         --fastqc \
         2> {log.stderr} 1> {log.stdout}
@@ -228,15 +230,15 @@ rule trim_galore_SE:
     conda:
         "envs/trim-galore.yaml"
     resources:
-        threads = 20,
+        threads = 4,
         nodes =   1,
-        mem_gb =  64,
+        mem_gb =  80,
     shell:
         """
         trim_galore \
         {input} \
         --output_dir {params.outdir} \
-        --cores {resources.threads} \
+        --cores {threads} \
         -q 20 \
         --fastqc \
         2> {log.stderr} 1> {log.stdout}
@@ -266,7 +268,7 @@ rule STAR:
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
         # path to STAR reference genome index
-        index = config["ref"]["index"],
+        index = config["ref"]["index"][units["{sample}"][]],
         outprefix = "analysis/star/{sample}."
     log:
         "logs/star/{sample}.log"
@@ -275,13 +277,13 @@ rule STAR:
     conda:
         "envs/star.yaml"
     resources:
-        threads = 20,
+        threads = 2,
         nodes =   1,
         mem_gb =  64,
     shell:
         """
         STAR \
-        --runThreadN {resources.threads} \
+        --runThreadN {threads} \
         --genomeDir {params.index} \
         --readFilesIn {input} \
         --twopassMode Basic \
@@ -355,7 +357,7 @@ rule edgeR:
     benchmark:
         "benchmarks/edgeR/edgeR.txt"
     conda:
-        "envs/R.yaml"
+        #use node095 RStudio Server R install
     resources:
         threads = 1,
         nodes = 1,
@@ -479,7 +481,7 @@ rule addRG:
 #         mem_gb =  64,
 #     shell:
 #         """
-#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -XX:+UseParallelGC -XX:ParallelGCThreads={resources.threads} -Djava.io.tmpdir=./tmp" \
+#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -XX:+UseParallelGC -XX:ParallelGCThreads={threads} -Djava.io.tmpdir=./tmp" \
 #             BaseRecalibrator \
 #             -R {params.ref_fasta} \
 #             -I {input} \
@@ -510,7 +512,7 @@ rule addRG:
 #         mem_gb =  64,
 #     shell:
 #         """
-#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g  -XX:+UseParallelGC -XX:ParallelGCThreads={resources.threads} -Djava.io.tmpdir=./tmp" \
+#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g  -XX:+UseParallelGC -XX:ParallelGCThreads={threads} -Djava.io.tmpdir=./tmp" \
 #             ApplyBQSR \
 #             --add-output-sam-program-record \
 #             -R {params.ref_fasta} \
@@ -550,7 +552,7 @@ rule addRG:
 #         -O {output} \
 #         -ERC GVCF \
 #         -dont-use-soft-clipped-bases \
-#         --native-pair-hmm-threads {resources.threads} \
+#         --native-pair-hmm-threads {threads} \
 #         --standard-min-confidence-threshold-for-calling 20 \
 #         --dbsnp {params.dbsnp} \
 #         {params.contigs} 1>{log.out} 2>{log.err}
@@ -750,7 +752,7 @@ rule addRG:
 #     #    "bbc/R/R-3.6.0",
 #     #    "bbc/pandoc/pandoc-2.7.3",
 #     resources:
-#         threads = 20,
+#         threads = 4,
 #         nodes =   1,
 #         mem_gb =  64,
 #     script:

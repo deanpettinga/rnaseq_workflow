@@ -36,10 +36,10 @@ snakemake \
 --use-conda \
 --jobs 20 \
 --cluster "sbatch \
---partition=savio \
---account=co_rosalind \
---qos=rosalind_savio_normal \
---nodes={resources.nodes} \
---cpus-per-task={threads} \
---mem={resources.mem_gb}000 \
---time=72:00:00"
+  --partition=savio \
+  --account=co_rosalind \
+  --qos=rosalind_savio_normal \
+  --nodes={resources.nodes} \
+  --cpus-per-task={threads} \
+  --mem={resources.mem_gb}000 \
+  --time=72:00:00" \
