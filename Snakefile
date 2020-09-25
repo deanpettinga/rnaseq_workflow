@@ -355,7 +355,7 @@ rule edgeR:
     benchmark:
         "benchmarks/edgeR/edgeR.txt"
     conda:
-        #use node095 RStudio Server R install
+        "envs/R.yaml"
     resources:
         threads = 1,
         nodes = 1,
