@@ -91,11 +91,11 @@ rule mergeLanesAndRename_SE:
     output:      "raw_data/{sample}-SE.fastq.gz"
     log:         "logs/mergeLanesAndRename/mergeLanesAndRename_SE-{sample}.log"
                  "logs/mergeLanesAndRename/mergeLanesAndRename_PE-{sample}.log"
-    threads: 1
     resources:
+        threads = 1,
         nodes =   1,
         mem_gb =  16,
-    envmodules:  "bbc/R/R-3.6.0"
+    conda:       "envs/R.yaml"
     script:      "bin/mergeLanesAndRename.R"
 
 rule mergeLanesAndRename_PE:
@@ -104,11 +104,11 @@ rule mergeLanesAndRename_PE:
                  "raw_data/{sample}-R2.fastq.gz"
     log:
                  "logs/mergeLanesAndRename/mergeLanesAndRename_PE-{sample}.log"
-    threads: 1
     resources:
+        threads = 1,
         nodes =   1,
         mem_gb =  16,
-    envmodules:  "bbc/R/R-3.6.0"
+    conda:       "envs/R.yaml"
     script:      "bin/mergeLanesAndRename.R"
 
 # def fastq_screen_input(wildcards):
@@ -133,8 +133,8 @@ rule mergeLanesAndRename_PE:
 #         R1 =      "logs/fastq_screen/fastq_screen.{sample}-R1.log",
 #         R2 =      "logs/fastq_screen/fastq_screen.{sample}-R2.log",
 #     benchmark:    "benchmarks/fastq_screen/{sample}.bmk"
-#     threads: 8
 #     resources:
+#         threads = 8,
 #         nodes =   1,
 #         mem_gb =  64,
 #     envmodules:   "bbc/fastq_screen/fastq_screen-0.14.0"
@@ -154,8 +154,8 @@ rule mergeLanesAndRename_PE:
 #                     "logs/fastq_screen/fastq_screen.{sample}-SE.log",
 #     benchmark:
 #                     "benchmarks/fastq_screen/fastq_screen.{sample}.bmk"
-#     threads: 8
 #     resources:
+#         threads = 8,
 #         nodes =     1,
 #         mem_gb =    64,
 #     envmodules:     "bbc/fastq_screen/fastq_screen-0.14.0"
@@ -192,19 +192,19 @@ rule trim_galore_PE:
         stderr="logs/trim_galore/{sample}.e"
     benchmark:
         "benchmarks/trim_galore/{sample}.txt"
-    envmodules:
-        "bbc/trim_galore/trim_galore-0.6.0"
-    threads: 4
+    conda:
+        "envs/trim-galore.yaml"
     resources:
+        threads = 20,
         nodes =   1,
-        mem_gb =  80,
+        mem_gb =  64,
     shell:
         """
         trim_galore \
         --paired \
         {input} \
         --output_dir {params.outdir} \
-        --cores {threads} \
+        --cores {resources.threads} \
         -q 20 \
         --fastqc \
         2> {log.stderr} 1> {log.stdout}
@@ -225,18 +225,18 @@ rule trim_galore_SE:
         stderr="logs/trim_galore/{sample}.e"
     benchmark:
         "benchmarks/trim_galore/{sample}.txt"
-    envmodules:
-        "bbc/trim_galore/trim_galore-0.6.0"
-    threads: 4
+    conda:
+        "envs/trim-galore.yaml"
     resources:
+        threads = 20,
         nodes =   1,
-        mem_gb =  80,
+        mem_gb =  64,
     shell:
         """
         trim_galore \
         {input} \
         --output_dir {params.outdir} \
-        --cores {threads} \
+        --cores {resources.threads} \
         -q 20 \
         --fastqc \
         2> {log.stderr} 1> {log.stdout}
@@ -272,17 +272,16 @@ rule STAR:
         "logs/star/{sample}.log"
     benchmark:
         "benchmarks/star/{sample}.txt"
-    envmodules:
-        "bbc/STAR/STAR-2.7.3a",
-        "bbc/samtools/samtools-1.9"
-    threads: 8
+    conda:
+        "envs/star.yaml"
     resources:
+        threads = 20,
         nodes =   1,
-        mem_gb =  120,
+        mem_gb =  64,
     shell:
         """
         STAR \
-        --runThreadN {threads} \
+        --runThreadN {resources.threads} \
         --genomeDir {params.index} \
         --readFilesIn {input} \
         --twopassMode Basic \
@@ -329,12 +328,12 @@ rule multiqc:
         "logs/multiqc.log"
     benchmark:
         "benchmarks/multiqc/multiqc.txt"
-    threads: 1
     resources:
+        threads = 1,
         nodes = 1,
         mem_gb = 32,
-    envmodules:
-        "bbc/multiqc/multiqc-1.8"
+    conda:
+        "envs/multiqc.yaml"
     shell:
         """
         multiqc -f {params} \
@@ -355,10 +354,10 @@ rule edgeR:
         "logs/edgeR.log"
     benchmark:
         "benchmarks/edgeR/edgeR.txt"
-    envmodules:
+    conda:
         #use node095 RStudio Server R install
-    threads: 1
     resources:
+        threads = 1,
         nodes = 1,
         mem_gb = 16,
     script:
@@ -376,15 +375,16 @@ rule addRG:
     benchmark:
         "benchmarks/00_addRG/{sample}.txt"
     envmodules:
-        "bbc/picard/picard-2.23.3"
+        "picard/2.9.0"
     params:
         unit=lambda wildcards: var_calling_units[var_calling_units["unit"]==wildcards.sample]['unit'].values[0],
         lib=lambda wildcards: var_calling_units[var_calling_units["unit"]==wildcards.sample]['library'].values[0],
         sample=lambda wildcards: var_calling_units[var_calling_units["unit"]==wildcards.sample]['sample'].values[0],
         platform_unit=lambda wildcards: var_calling_units[var_calling_units["unit"]==wildcards.sample]['platform_unit'].values[0]
-    threads: 4
     resources:
-        mem_gb = 64
+        threads = 4,
+        nodes =   1,
+        mem_gb =  64
     shell:
         """
         java -Xms16g -Xmx64g -Djava.io.tmpdir=./tmp -jar $PICARD AddOrReplaceReadGroups \
@@ -415,9 +415,10 @@ rule addRG:
 #         "benchmarks/01_markdup/{sample}.txt"
 #     envmodules:
 #         "bbc/picard/picard-2.23.3"
-#     threads: 4
 #     resources:
-#         mem_gb = 64
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         java -Xms16g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp -jar $PICARD MarkDuplicates \
@@ -442,9 +443,10 @@ rule addRG:
 #         ref_fasta=config["ref"]["sequence"],
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1"
-#     threads: 4
 #     resources:
-#         mem_gb = 64
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp" \
@@ -471,12 +473,13 @@ rule addRG:
 #         known_indels=config["ref"]["known_indels"]
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1"
-#     threads: 4
 #     resources:
-#         mem_gb = 64
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
-#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -XX:+UseParallelGC -XX:ParallelGCThreads={threads} -Djava.io.tmpdir=./tmp" \
+#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -XX:+UseParallelGC -XX:ParallelGCThreads={resources.threads} -Djava.io.tmpdir=./tmp" \
 #             BaseRecalibrator \
 #             -R {params.ref_fasta} \
 #             -I {input} \
@@ -501,12 +504,13 @@ rule addRG:
 #         ref_fasta=config["ref"]["sequence"],
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1"
-#     threads: 4
 #     resources:
-#         mem_gb = 64
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
-#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g  -XX:+UseParallelGC -XX:ParallelGCThreads={threads} -Djava.io.tmpdir=./tmp" \
+#         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g  -XX:+UseParallelGC -XX:ParallelGCThreads={resources.threads} -Djava.io.tmpdir=./tmp" \
 #             ApplyBQSR \
 #             --add-output-sam-program-record \
 #             -R {params.ref_fasta} \
@@ -533,9 +537,10 @@ rule addRG:
 #
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1"
-#     threads: 4
 #     resources:
-#         mem_gb = 80
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp" \
@@ -545,7 +550,7 @@ rule addRG:
 #         -O {output} \
 #         -ERC GVCF \
 #         -dont-use-soft-clipped-bases \
-#         --native-pair-hmm-threads {threads} \
+#         --native-pair-hmm-threads {resources.threads} \
 #         --standard-min-confidence-threshold-for-calling 20 \
 #         --dbsnp {params.dbsnp} \
 #         {params.contigs} 1>{log.out} 2>{log.err}
@@ -569,9 +574,10 @@ rule addRG:
 #         contigs = lambda wildcards: "-L " + contig_groups[contig_groups.name == wildcards.contig_group]['contigs'].values[0].replace(",", " -L "),
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1"
-#     threads: 4
 #     resources:
-#         mem_gb = 80
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp" \
@@ -598,9 +604,10 @@ rule addRG:
 #         genomicsdb="analysis/06_combinevar/{contig_group}.genomicsdb"
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1"
-#     threads: 4
 #     resources:
-#         mem_gb = 80
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp" \
@@ -630,9 +637,10 @@ rule addRG:
 #     envmodules:
 #         "bbc/gatk/gatk-4.1.8.1",
 #         "bbc/vt/vt-0.1.16"
-#     threads: 4
 #     resources:
-#         mem_gb = 80
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         gatk --java-options "-Xms8g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp" \
@@ -696,9 +704,10 @@ rule addRG:
 #     envmodules:
 #         "bbc/SnpEff/SnpEff-4.3t",
 #         "bbc/htslib/htslib-1.10.2"
-#     threads: 4
 #     resources:
-#         mem_gb = 80
+#         threads = 4,
+#         nodes =   1,
+#         mem_gb =  64,
 #     shell:
 #         """
 #         java -Xms8g -Xmx{resources.mem_gb}g -Djava.io.tmpdir=./tmp -jar $SNPEFF/snpEff.jar eff \
@@ -740,8 +749,9 @@ rule addRG:
 #     #    "bbc/cairo/cairo-1.16.0",
 #     #    "bbc/R/R-3.6.0",
 #     #    "bbc/pandoc/pandoc-2.7.3",
-#     threads: 1
 #     resources:
-#         mem_gb = 60
+#         threads = 20,
+#         nodes =   1,
+#         mem_gb =  64,
 #     script:
 #         "bin/snprelate.Rmd"

@@ -1,23 +1,24 @@
-#PBS -l walltime=100:00:00
-#PBS -l mem=8gb
-#PBS -l nodes=node065
-#PBS -m ae
-#PBS -N rnaseq_workflow
-#PBS -o logs/rnaseq_workflow.o
-#PBS -e logs/rnaseq_workflow.e
+#!/bin/bash
+#SBATCH -J rnaseq-workflow
+#SBATCH --partition=savio
+#SBATCH --account=co_rosalind
+#SBATCH --qos=rosalind_htc2_normal
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --time=72:00:00
+#SBATCH --mem=8000
+#SBATCH -o logs/runs/rnaseq-workflow.%j.o
+#SBATCH -e logs/runs/rnaseq-workflow.%j.o
+#SBATCH --mail-user=pettinga@berkeley.edu
+#SBATCH --mail-type=All
 
-cd ${PBS_O_WORKDIR}
-# export Singularity 3.4.0-1 installed on node065 to $PATH.
-# snakemake should now automatically call Singularity 3.4.0-1
-#PATH=/usr/local/bin/:$PATH
+conda activate snakemake
 
-module load bbc/snakemake/snakemake-5.20.1
-
-# specify which conda installation to use
-conda_setup='/secondary/projects/bbc/tools/miniconda3/etc/profile.d/conda.sh'
-
-# this make 'conda' callable and allows conda environments to be created.
-source $conda_setup
+# # specify which conda installation to use
+# conda_setup='/secondary/projects/bbc/tools/miniconda3/etc/profile.d/conda.sh'
+#
+# # this make 'conda' callable and allows conda environments to be created.
+# source $conda_setup
 
 # save DAG job file with time stamp
 TIME=$(date "+%Y-%m-%d_%H.%M.%S")
@@ -26,19 +27,21 @@ TIME=$(date "+%Y-%m-%d_%H.%M.%S")
 logs_dir="logs/runs"
 [[ -d $logs_dir ]] || mkdir -p $logs_dir
 
-snakemake --use-envmodules -n > logs/runs/workflow_${TIME}.txt
+snakemake --use-conda -n > logs/runs/workflow_${TIME}.txt
 snakemake --dag | dot -Tpng > logs/runs/workflow_${TIME}.png
 
 
-snakemake \
---use-envmodules \
---use-conda \
---jobs 100 \
---cluster "qsub \
--q bbc \
--V \
--l nodes=1:ppn={threads} \
--l mem={resources.mem_gb}gb \
--l walltime=100:00:00 \
--o logs/runs/ \
--e logs/runs/"
+# snakemake \
+# --use-conda \
+# --jobs \
+# --cluster "sbatch \
+# -J star-index \
+# --partition=savio \
+# --account=co_rosalind \
+# --qos=rosalind_savio_normal \
+# --nodes={resources.nodes}
+# --cpus-per-task={threads} \
+# --mem={resources.mem_gb}000 \
+# -l walltime=72:00:00 \
+# -o logs/runs/ \
+# -e logs/runs/"
