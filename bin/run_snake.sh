@@ -2,7 +2,7 @@
 #SBATCH -J rnaseq-workflow
 #SBATCH --partition=savio
 #SBATCH --account=co_rosalind
-#SBATCH --qos=rosalind_htc2_normal
+#SBATCH --qos=rosalind_savio_normal
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --time=72:00:00
@@ -12,6 +12,7 @@
 #SBATCH --mail-user=pettinga@berkeley.edu
 #SBATCH --mail-type=All
 
+source ~/.bashrc
 conda activate snakemake
 
 # # specify which conda installation to use
