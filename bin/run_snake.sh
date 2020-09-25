@@ -32,17 +32,17 @@ snakemake --use-conda -n > logs/runs/workflow_${TIME}.txt
 snakemake --dag | dot -Tpng > logs/runs/workflow_${TIME}.png
 
 
-# snakemake \
-# --use-conda \
-# --jobs \
-# --cluster "sbatch \
-# -J star-index \
-# --partition=savio \
-# --account=co_rosalind \
-# --qos=rosalind_savio_normal \
-# --nodes={resources.nodes}
-# --cpus-per-task={threads} \
-# --mem={resources.mem_gb}000 \
-# -l walltime=72:00:00 \
-# -o logs/runs/ \
-# -e logs/runs/"
+snakemake \
+--use-conda \
+--jobs \
+--cluster "sbatch \
+-J star-index \
+--partition=savio \
+--account=co_rosalind \
+--qos=rosalind_savio_normal \
+--nodes={resources.nodes}
+--cpus-per-task={threads} \
+--mem={resources.mem_gb}000 \
+-l walltime=72:00:00 \
+-o logs/runs/ \
+-e logs/runs/"

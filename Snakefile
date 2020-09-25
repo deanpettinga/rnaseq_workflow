@@ -55,8 +55,8 @@ rule all:
             # SE
         # expand("raw_data/{units.sample}-SE.fastq.gz", units=units.itertuples()),
             # PE
-        # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
-        # expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+        expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),
         # fastq_screen
             # PE
         # expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
@@ -81,7 +81,7 @@ rule all:
         # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
         # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
-        "analysis/multiqc/multiqc_report.html",
+        # "analysis/multiqc/multiqc_report.html",
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
