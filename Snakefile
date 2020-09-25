@@ -17,7 +17,7 @@ configfile: "bin/config.yaml"
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
-contrasts = pd.read_table(config["contrasts"]).set_index("sample", drop=False)
+contrasts = pd.read_table(config["contrasts"]).set_index("name", drop=False)
 #validate(contrasts, schema="schemas/contrasts.schema.yaml")
 
 if not os.path.exists('tmp'):
