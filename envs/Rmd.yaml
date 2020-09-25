@@ -2,7 +2,6 @@ channels:
   - conda-forge
 dependencies:
   - r-base =3.6.0
-  - r-tidyverse =1.2.1
   - r::r-stringi
   - r-rmarkdown
   - pandoc

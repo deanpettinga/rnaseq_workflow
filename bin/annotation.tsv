@@ -1,4 +1,5 @@
 common_name	species	org.db	kegg
+sunflower Helianthus annuus  han
 human	Homo sapiens	org.Hs.eg.db	hsa
 mouse	Mus musculus	org.Mm.eg.db	mmu
 rat	Rattus norvegicus	org.Rn.eg.db	rno

@@ -19,14 +19,14 @@ This workflow performs a differential expression analysis with STAR and edgeR
 
 ## Usage
 
-**NOTE** this workflow is optimized for HPC3 @ Van Andel Institute.
+**NOTE** this workflow was modified from the [vari-bbc rnaseq_workflow](https://github.com/vari-bbc/rnaseq_workflow)
 
 ### Step 1: Installation
 
 The following recipe provides established best practices for running and extending this workflow in a reproducible way.
 
-1. [Fork](https://help.github.com/en/articles/fork-a-repo) the repo to a project directory on /secondary
-2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the fork to the desired working directory for your project.
+1. [Fork](https://help.github.com/en/articles/fork-a-repo)
+2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the fork to your desired location on savio scratch directory.
 3. [Create a new branch](https://git-scm.com/docs/gittutorial#_managing_branches) (the project-branch) within the clone and switch to it. The branch will contain any project-specific modifications (e.g. to configuration, but also to code).
 
 ### Step 2: Configure the workflow
