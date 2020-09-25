@@ -75,13 +75,13 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-SE_fastqc.zip", units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-SE.fastq.gz_trimming_report.txt", units=units.itertuples()),
             # PE
-        # expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
-        # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
-        # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
-        # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
         # STAR alignment
-        # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
-        # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
         "analysis/multiqc/multiqc_report.html",
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
@@ -268,7 +268,7 @@ rule STAR:
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
         # path to STAR reference genome index
-        index = config["ref"]["index"][units["{sample}"][]],
+        index = config["ref"]["index"][units.loc["{sample}","accession"]],
         outprefix = "analysis/star/{sample}."
     log:
         "logs/star/{sample}.log"
