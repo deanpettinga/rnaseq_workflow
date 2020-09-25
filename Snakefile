@@ -17,7 +17,7 @@ configfile: "bin/config.yaml"
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
-contrasts = pd.read_table(config["contrasts"]).set_index("name", drop=False)
+contrasts = pd.read_table(config["contrasts"]).set_index("sample", drop=False)
 #validate(contrasts, schema="schemas/contrasts.schema.yaml")
 
 if not os.path.exists('tmp'):
@@ -30,14 +30,14 @@ contigs_file = "bin/grouped_contigs.tsv"
 # we read in this file even if not calling variants. Otherwise variant-calling rules relying on this file will cause an error.
 contig_groups = pd.read_table(contigs_file)
 
-# if config set to run variants component of pipeline,  check that chromosomes were parsed correctly in the grouped_Contigs.tsv file. 
+# if config set to run variants component of pipeline,  check that chromosomes were parsed correctly in the grouped_Contigs.tsv file.
 if config["call_variants"]:
 
     # check chromosomes/contigs parsed correctly.
     chroms = contig_groups['contigs'].values[0:(contig_groups.shape[0]-1)].tolist()
     unanchored_contigs = contig_groups['contigs'].values[contig_groups.shape[0]-1].split(",")
     contig_groups_flattened = chroms + unanchored_contigs
-    
+
     fai_pd = pd.read_table(fai_file, header=None)
 
     assert contig_groups_flattened == fai_pd.iloc[:,0].values.tolist(), "Chromosomes in .fai do not match those in 'grouped_contigs.tsv'."
@@ -383,7 +383,7 @@ rule addRG:
         sample=lambda wildcards: var_calling_units[var_calling_units["unit"]==wildcards.sample]['sample'].values[0],
         platform_unit=lambda wildcards: var_calling_units[var_calling_units["unit"]==wildcards.sample]['platform_unit'].values[0]
     threads: 4
-    resources: 
+    resources:
         mem_gb = 64
     shell:
         """
@@ -406,7 +406,7 @@ rule markdups:
     output:
         bam="analysis/01_markdup/{sample}.Aligned.sortedByCoord.out.addRG.mrkdup.bam",
         metrics="analysis/01_markdup/{sample}.Aligned.sortedByCoord.out.addRG.mrkdup.metrics"
-    params: 
+    params:
         input_params=lambda wildcards: expand("--INPUT analysis/00_addRG/{sample}.Aligned.sortedByCoord.out.addRG.bam", sample=var_calling_units[var_calling_units["sample"]==wildcards.sample].index.values)
     log:
         out="logs/01_markdup/{sample}.o",
@@ -416,7 +416,7 @@ rule markdups:
     envmodules:
         "bbc/picard/picard-2.23.3"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 64
     shell:
         """
@@ -443,7 +443,7 @@ rule splitncigar:
     envmodules:
         "bbc/gatk/gatk-4.1.8.1"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 64
     shell:
         """
@@ -472,7 +472,7 @@ rule base_recalibrate:
     envmodules:
         "bbc/gatk/gatk-4.1.8.1"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 64
     shell:
         """
@@ -502,7 +502,7 @@ rule applyBQSR:
     envmodules:
         "bbc/gatk/gatk-4.1.8.1"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 64
     shell:
         """
@@ -530,11 +530,11 @@ rule haplotypecaller:
         dbsnp=config["ref"]["known_snps"],
         ref_fasta=config["ref"]["sequence"],
         contigs = lambda wildcards: "-L " + contig_groups[contig_groups.name == wildcards.contig_group]['contigs'].values[0].replace(",", " -L "),
-        
+
     envmodules:
         "bbc/gatk/gatk-4.1.8.1"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 80
     shell:
         """
@@ -570,7 +570,7 @@ rule combinevar:
     envmodules:
         "bbc/gatk/gatk-4.1.8.1"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 80
     shell:
         """
@@ -599,7 +599,7 @@ rule jointgeno:
     envmodules:
         "bbc/gatk/gatk-4.1.8.1"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 80
     shell:
         """
@@ -631,7 +631,7 @@ rule merge_and_filter_vcf:
         "bbc/gatk/gatk-4.1.8.1",
         "bbc/vt/vt-0.1.16"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 80
     shell:
         """
@@ -658,7 +658,7 @@ rule merge_and_filter_vcf:
         --filter "QD < 2.0" \
         -O {output.filt} \
         1>>{log.out} 2>>{log.err}
-        
+
         echo "VariantFiltration done." >> {log.out}
         echo "VariantFiltration done." >> {log.err}
 
@@ -669,7 +669,7 @@ rule merge_and_filter_vcf:
         --exclude-filtered \
         -O {output.pass_only} \
         1>>{log.out} 2>>{log.err}
-        
+
         echo "SelectVariants done." >> {log.out}
         echo "SelectVariants done." >> {log.err}
 
@@ -697,7 +697,7 @@ rule variant_annot:
         "bbc/SnpEff/SnpEff-4.3t",
         "bbc/htslib/htslib-1.10.2"
     threads: 4
-    resources: 
+    resources:
         mem_gb = 80
     shell:
         """

@@ -1,4 +1,4 @@
-name  meta_col	relative	baseline
+name	meta_col	relative	baseline
 leaf_Ari_over_NE  group arikara_leaf  nebraska_leaf
 meristem_Ari_over_NE  group arikara_meristem  nebraska_meristem
 node_Ari_over_NE  group arikara_node  nebraska_node
