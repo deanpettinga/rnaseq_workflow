@@ -92,11 +92,6 @@ rule mergeLanesAndRename_SE:
     log:         "logs/mergeLanesAndRename/mergeLanesAndRename_SE-{sample}.log"
                  "logs/mergeLanesAndRename/mergeLanesAndRename_PE-{sample}.log"
     resources:
-<<<<<<< HEAD
-=======
-        partition = "rosalind_savio_"
-        qos =     "rosalind_savio_normal",
->>>>>>> d908845d7346bcd29afb3f8a4f86f35aa598f59a
         threads = 1,
         nodes =   1,
         mem_gb =  16,
