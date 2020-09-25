@@ -8,7 +8,7 @@
 #SBATCH --time=72:00:00
 #SBATCH --mem=8000
 #SBATCH -o logs/runs/rnaseq-workflow.%j.o
-#SBATCH -e logs/runs/rnaseq-workflow.%j.o
+#SBATCH -e logs/runs/rnaseq-workflow.%j.e
 #SBATCH --mail-user=pettinga@berkeley.edu
 #SBATCH --mail-type=All
 
