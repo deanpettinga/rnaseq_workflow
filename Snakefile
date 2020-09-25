@@ -55,8 +55,8 @@ rule all:
             # SE
         # expand("raw_data/{units.sample}-SE.fastq.gz", units=units.itertuples()),
             # PE
-        # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
-        # expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+        expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),
         # fastq_screen
             # PE
         # expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
