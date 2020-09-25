@@ -42,8 +42,6 @@ if config["call_variants"]:
 
     assert contig_groups_flattened == fai_pd.iloc[:,0].values.tolist(), "Chromosomes in .fai do not match those in 'grouped_contigs.tsv'."
 
-print units["arikara_leaf_1"]
-
 ##### target rules #####
 
 rule all:
