@@ -197,7 +197,7 @@ rule trim_galore_PE:
     resources:
         threads = 4,
         nodes =   1,
-        mem_gb =  80,
+        mem_gb =  64,
     shell:
         """
         trim_galore \
@@ -230,7 +230,7 @@ rule trim_galore_SE:
     resources:
         threads = 4,
         nodes =   1,
-        mem_gb =  80,
+        mem_gb =  64,
     shell:
         """
         trim_galore \
@@ -331,7 +331,7 @@ rule multiqc:
     resources:
         threads = 1,
         nodes = 1,
-        mem_gb = 32,
+        mem_gb = 64,
     conda:
         "envs/multiqc.yaml"
     shell:
@@ -359,7 +359,7 @@ rule edgeR:
     resources:
         threads = 1,
         nodes = 1,
-        mem_gb = 16,
+        mem_gb = 64,
     script:
         "bin/diffExp.Rmd"
 
