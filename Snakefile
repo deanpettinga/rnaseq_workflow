@@ -82,7 +82,7 @@ rule all:
         # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
         # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
-        # "analysis/multiqc/multiqc_report.html",
+        "analysis/multiqc/multiqc_report.html",
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",

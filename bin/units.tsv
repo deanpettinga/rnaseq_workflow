@@ -1,14 +1,7 @@
 sample	group	accession	tissue	replicate	pooled	growthStage	dayLength	fq1	fq2	notes
 arikara_leaf_1	arikara_leaf	arikara	leaf	1	no	20_DAP	longDay	Ari-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090774_1.fq.gz	Ari-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090774_2.fq.gz	duplicated leaf sample 1.
-arikara_leaf_1	arikara_leaf	arikara	leaf	1	no	20_DAP	longDay	Ari-LD-leaf-1-R_1.fq.gz	Ari-LD-leaf-1-R_2.fq.gz	duplicated leaf sample 1.
-arikara_leaf_1	arikara_leaf	arikara	leaf	1	no	20_DAP	longDay	Ari-LD-leaf-1-R1.fq.gz	Ari-LD-leaf-1-R2.fq.gz	duplicated leaf sample 1.
-arikara_leaf_1	arikara_leaf	arikara	leaf	1	no	20_DAP	longDay	Ari-leaf-1_1.fq.gz	Ari-leaf-1_2.fq.gz	duplicated leaf sample 1.
 arikara_leaf_2	arikara_leaf	arikara	leaf	2	no	20_DAP	longDay	Ari-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090775_1.fq.gz	Ari-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090775_2.fq.gz	duplicated leaf sample 2.
-arikara_leaf_2	arikara_leaf	arikara	leaf	2	no	20_DAP	longDay	Ari-leaf-2_1.fq.gz	Ari-leaf-2_2.fq.gz	duplicated leaf sample 2.
-arikara_leaf_2	arikara_leaf	arikara	leaf	2	no	20_DAP	longDay	Ari-LD-leaf_test_2-1-R1.fq.gz	Ari-LD-leaf_test_2-1-R2.fq.gz	duplicated leaf sample 2. also test?
 arikara_leaf_3	arikara_leaf	arikara	leaf	3	no	20_DAP	longDay	Ari-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090776_1.fq.gz	Ari-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090776_2.fq.gz	duplicated leaf sample 3.
-arikara_leaf_3	arikara_leaf	arikara	leaf	3	no	20_DAP	longDay	Ari-leaf-3_1.fq.gz	Ari-leaf-3_2.fq.gz	duplicated leaf sample 3.
-arikara_leaf_3	arikara_leaf	arikara	leaf	3	no	20_DAP	longDay	Ari-LD-leaf_test_3-1-R1.fq.gz	Ari-LD-leaf_test_3-1-R2.fq.gz	duplicated leaf sample 3. also test?
 arikara_meristem_1	arikara_meristem	arikara	meristem	1	no	20_DAP	longDay	Ari-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090786_1.fq.gz	Ari-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090786_2.fq.gz	
 arikara_meristem_2	arikara_meristem	arikara	meristem	2	no	20_DAP	longDay	Ari-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090787_1.fq.gz	Ari-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090787_2.fq.gz	
 arikara_meristem_3	arikara_meristem	arikara	meristem	3	no	20_DAP	longDay	Ari-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090788_1.fq.gz	Ari-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090788_2.fq.gz	
