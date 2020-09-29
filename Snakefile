@@ -15,7 +15,7 @@ configfile: "bin/config.yaml"
 
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
 print(units.loc["arikara_node_3"]["accession"])
-print(config["ref"]["index"][units.loc["arikara_node_3","accession"]])
+print(config["ref"]["index"][units.loc["nebraska_node_2"]["accession"]])
 
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
@@ -257,10 +257,8 @@ def STAR_input(wildcards):
 
 def STAR_params(wildcards):
     index = config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["accession"]]
-<<<<<<< HEAD
     outprefix = "analysis/star/{sample}."
     return [index,outprefix]
-=======
     outprefix = "analysis/star/{sample}.".format(**wildcards)
     return [index, outprefix]
 
@@ -271,7 +269,6 @@ def STAR_index(wildcards):
 def STAR_outprefix(wildcards):
     prefix = "analysis/star/{sample}.".format(**wildcards)
     return prefix
->>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
 
 rule STAR:
     input:
@@ -287,13 +284,9 @@ rule STAR:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
-<<<<<<< HEAD
-        index = config["ref"]["index"][units.loc["{sample}"]["accession"]]
+        index = lambda wildcards: config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["accession"]],
         outprefix = "analysis/star/{sample}."
-=======
-	index = config["ref"]["index"][units["{sample}"]["accession"]],
 	# STAR_outprefix
->>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
     log:
         "logs/star/{sample}.log"
     benchmark:
@@ -308,20 +301,13 @@ rule STAR:
         """
         STAR \
         --runThreadN {threads} \
-<<<<<<< HEAD
         --genomeDir {params.index} \
-=======
-        --genomeDir {params} \
->>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
         --readFilesIn {input} \
         --twopassMode Basic \
         --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate \
-<<<<<<< HEAD
         --outFileNamePrefix {params.outprefix} \
-=======
         --outFileNamePrefix {params} \
->>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
