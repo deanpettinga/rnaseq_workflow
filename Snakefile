@@ -13,8 +13,10 @@ conda_avail = (which('conda') is not None)
 configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
-# units = pd.read_table("bin/units_test.tsv").set_index("sample", drop=False)
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
+print(units.loc["arikara_node_3"]["accession"])
+print(config["ref"]["index"][units.loc["arikara_node_3","accession"]])
+
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
 contrasts = pd.read_table(config["contrasts"]).set_index("name", drop=False)
@@ -74,15 +76,16 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-SE_fastqc.zip", units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-SE.fastq.gz_trimming_report.txt", units=units.itertuples()),
             # PE
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
-        # STAR alignment
+        # expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
+            # STAR alignment
         # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
         # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
-        # "analysis/multiqc/multiqc_report.html",
+        "analysis/multiqc/multiqc_report.html",
+
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -254,8 +257,21 @@ def STAR_input(wildcards):
 
 def STAR_params(wildcards):
     index = config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["accession"]]
+<<<<<<< HEAD
     outprefix = "analysis/star/{sample}."
     return [index,outprefix]
+=======
+    outprefix = "analysis/star/{sample}.".format(**wildcards)
+    return [index, outprefix]
+
+def STAR_index(wildcards):
+    samp = "{sample}".format(**wildcards)
+    return config["ref"]["index"][units.loc[samp]["accession"]]
+
+def STAR_outprefix(wildcards):
+    prefix = "analysis/star/{sample}.".format(**wildcards)
+    return prefix
+>>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
 
 rule STAR:
     input:
@@ -271,8 +287,13 @@ rule STAR:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
+<<<<<<< HEAD
         index = config["ref"]["index"][units.loc["{sample}"]["accession"]]
         outprefix = "analysis/star/{sample}."
+=======
+	index = config["ref"]["index"][units["{sample}"]["accession"]],
+	# STAR_outprefix
+>>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
     log:
         "logs/star/{sample}.log"
     benchmark:
@@ -280,19 +301,27 @@ rule STAR:
     conda:
         "envs/star.yaml"
     resources:
-        threads = 2,
+        threads = 8,
         nodes =   1,
         mem_gb =  64,
     shell:
         """
         STAR \
         --runThreadN {threads} \
+<<<<<<< HEAD
         --genomeDir {params.index} \
+=======
+        --genomeDir {params} \
+>>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
         --readFilesIn {input} \
         --twopassMode Basic \
         --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate \
+<<<<<<< HEAD
         --outFileNamePrefix {params.outprefix} \
+=======
+        --outFileNamePrefix {params} \
+>>>>>>> b17a6d327e5251bdd7367e11b3f21b66cd9300db
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
@@ -360,7 +389,7 @@ rule edgeR:
     benchmark:
         "benchmarks/edgeR/edgeR.txt"
     conda:
-        #use node095 RStudio Server R install
+        "envs/R.yaml"
     resources:
         threads = 1,
         nodes = 1,
