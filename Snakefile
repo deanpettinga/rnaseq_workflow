@@ -42,6 +42,7 @@ if config["call_variants"]:
 
     assert contig_groups_flattened == fai_pd.iloc[:,0].values.tolist(), "Chromosomes in .fai do not match those in 'grouped_contigs.tsv'."
 
+
 ##### target rules #####
 
 rule all:
@@ -73,15 +74,26 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-SE_fastqc.zip", units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-SE.fastq.gz_trimming_report.txt", units=units.itertuples()),
             # PE
+<<<<<<< HEAD
         # expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
+=======
+        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
+        expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
+>>>>>>> b364ac8289e500ee43c3e7b10c07cd6e0e3051a3
         # STAR alignment
         # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
         # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
+<<<<<<< HEAD
 	# "analysis/multiqc/multiqc_report.html",
+=======
+        # "analysis/multiqc/multiqc_report.html",
+>>>>>>> b364ac8289e500ee43c3e7b10c07cd6e0e3051a3
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -251,6 +263,11 @@ def STAR_input(wildcards):
         fq2 = "analysis/trimmed_data/{sample}-R2_val_2.fq.gz".format(**wildcards)
         return [fq1,fq2]
 
+def STAR_params(wildcards):
+    index = config["ref"]["index"][units.loc["{sample}".format(**wildcards),"accession"]]
+    outprefix = "analysis/star/{sample}."
+    return [index,outprefix]
+
 rule STAR:
     input:
         STAR_input
@@ -265,9 +282,13 @@ rule STAR:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
+<<<<<<< HEAD
         # path to STAR reference genome index
         index = units["/{sample/}"]["referenceIndex"],
 	outprefix = "analysis/star/{sample}."
+=======
+        STAR_params
+>>>>>>> b364ac8289e500ee43c3e7b10c07cd6e0e3051a3
     log:
         "logs/star/{sample}.log"
     benchmark:
@@ -282,12 +303,12 @@ rule STAR:
         """
         STAR \
         --runThreadN {threads} \
-        --genomeDir {params.index} \
+        --genomeDir {params[0]} \
         --readFilesIn {input} \
         --twopassMode Basic \
         --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate \
-        --outFileNamePrefix {params.outprefix} \
+        --outFileNamePrefix {params[1]} \
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
