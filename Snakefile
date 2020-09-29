@@ -253,7 +253,7 @@ def STAR_input(wildcards):
         return [fq1,fq2]
 
 def STAR_params(wildcards):
-    index = config["ref"]["index"][units.loc["{sample}".format(**wildcards),"accession"]]
+    index = config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["accession"]]
     outprefix = "analysis/star/{sample}."
     return [index,outprefix]
 
@@ -271,7 +271,8 @@ rule STAR:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
-        STAR_params
+        index = config["ref"]["index"][units.loc["{sample}"]["accession"]]
+        outprefix = "analysis/star/{sample}."
     log:
         "logs/star/{sample}.log"
     benchmark:
@@ -286,12 +287,12 @@ rule STAR:
         """
         STAR \
         --runThreadN {threads} \
-        --genomeDir {params[0]} \
+        --genomeDir {params.index} \
         --readFilesIn {input} \
         --twopassMode Basic \
         --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate \
-        --outFileNamePrefix {params[1]} \
+        --outFileNamePrefix {params.outprefix} \
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
