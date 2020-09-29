@@ -282,7 +282,7 @@ rule STAR:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
-	STAR_outprefix
+	index = config["ref"]["index"][units["{sample}"]["accession"]],
 	# STAR_outprefix
     log:
         "logs/star/{sample}.log"
