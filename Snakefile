@@ -13,8 +13,8 @@ conda_avail = (which('conda') is not None)
 configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
-# units = pd.read_table("bin/units_test.tsv").set_index("sample", drop=False)
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
+print(units.loc["arikara_leaf_3"]["referenceIndex"])
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
 contrasts = pd.read_table(config["contrasts"]).set_index("name", drop=False)
@@ -73,15 +73,15 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-SE_fastqc.zip", units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-SE.fastq.gz_trimming_report.txt", units=units.itertuples()),
             # PE
-        expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
+        # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
         # STAR alignment
-        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
-        expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
+        # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
+        # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
-        "analysis/multiqc/multiqc_report.html",
+	# "analysis/multiqc/multiqc_report.html",
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -266,8 +266,8 @@ rule STAR:
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
         # path to STAR reference genome index
-        index = config["ref"]["index"][units.loc["{sample}","accession"]],
-        outprefix = "analysis/star/{sample}."
+        index = units["/{sample/}"]["referenceIndex"],
+	outprefix = "analysis/star/{sample}."
     log:
         "logs/star/{sample}.log"
     benchmark:
@@ -275,7 +275,7 @@ rule STAR:
     conda:
         "envs/star.yaml"
     resources:
-        threads = 2,
+        threads = 8,
         nodes =   1,
         mem_gb =  64,
     shell:
@@ -355,7 +355,7 @@ rule edgeR:
     benchmark:
         "benchmarks/edgeR/edgeR.txt"
     conda:
-        #use node095 RStudio Server R install
+        "envs/R.yaml"
     resources:
         threads = 1,
         nodes = 1,
