@@ -28,11 +28,8 @@ arikara_lateBudding_32	arikara_lateBudding	lateBudding	32	no	R1plus5	longDay	ari
 arikara_lateBudding_47	arikara_lateBudding	lateBudding	47	no	R1plus5	longDay	arikara	Ari-R1plus5-47_1.fq.gz	Ari-R1plus5-47_2.fq.gz
 arikara_lateBudding_6	arikara_lateBudding	lateBudding	6	no	R1plus5	longDay	arikara	Ari-R1plus5-6_1.fq.gz	Ari-R1plus5-6_2.fq.gz
 nebraska_leaf_1	nebraska_leaf	leaf	1	no	20_DAP	longDay	nebraska	NB-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090777_1.fq.gz	NB-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090777_2.fq.gz
-nebraska_leaf_1	nebraska_leaf	leaf	1	no	20_DAP	longDay	nebraska	NB-leaf-1_1.fq.gz	NB-leaf-1_2.fq.gz
 nebraska_leaf_2	nebraska_leaf	leaf	2	no	20_DAP	longDay	nebraska	NB-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090778_1.fq.gz	NB-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090778_2.fq.gz
-nebraska_leaf_2	nebraska_leaf	leaf	2	no	20_DAP	longDay	nebraska	NB-leaf-2_1.fq.gz	NB-leaf-2_2.fq.gz
 nebraska_leaf_3	nebraska_leaf	leaf	3	no	20_DAP	longDay	nebraska	NB-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090779_1.fq.gz	NB-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090779_2.fq.gz
-nebraska_leaf_3	nebraska_leaf	leaf	3	no	20_DAP	longDay	nebraska	NB-leaf-3_1.fq.gz	NB-leaf-3_2.fq.gz
 nebraska_meristem_1	nebraska_meristem	meristem	1	no	20_DAP	longDay	nebraska	NB-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090789_1.fq.gz	NB-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090789_2.fq.gz
 nebraska_meristem_2	nebraska_meristem	meristem	2	no	20_DAP	longDay	nebraska	NB-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090790_1.fq.gz	NB-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090790_2.fq.gz
 nebraska_meristem_3	nebraska_meristem	meristem	3	no	20_DAP	longDay	nebraska	NB-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090791_1.fq.gz	NB-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090791_2.fq.gz

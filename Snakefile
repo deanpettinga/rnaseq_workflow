@@ -14,7 +14,9 @@ configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
-print(units.loc["arikara_leaf_3"]["referenceIndex"])
+print(units.loc["arikara_node_3"]["accession"])
+print(config["ref"]["index"][units.loc["arikara_node_3","accession"]])
+
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
 contrasts = pd.read_table(config["contrasts"]).set_index("name", drop=False)
@@ -74,26 +76,16 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-SE_fastqc.zip", units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-SE.fastq.gz_trimming_report.txt", units=units.itertuples()),
             # PE
-<<<<<<< HEAD
         # expand("analysis/trimmed_data/{units.sample}_R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
-=======
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}.fq.gz", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.html", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
-        expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
->>>>>>> b364ac8289e500ee43c3e7b10c07cd6e0e3051a3
-        # STAR alignment
+            # STAR alignment
         # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
         # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
         # multiQC
-<<<<<<< HEAD
-	# "analysis/multiqc/multiqc_report.html",
-=======
-        # "analysis/multiqc/multiqc_report.html",
->>>>>>> b364ac8289e500ee43c3e7b10c07cd6e0e3051a3
+        "analysis/multiqc/multiqc_report.html",
+
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -264,9 +256,17 @@ def STAR_input(wildcards):
         return [fq1,fq2]
 
 def STAR_params(wildcards):
-    index = config["ref"]["index"][units.loc["{sample}".format(**wildcards),"accession"]]
-    outprefix = "analysis/star/{sample}."
-    return [index,outprefix]
+    index = config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["accession"]]
+    outprefix = "analysis/star/{sample}.".format(**wildcards)
+    return [index, outprefix]
+
+def STAR_index(wildcards):
+    samp = "{sample}".format(**wildcards)
+    return config["ref"]["index"][units.loc[samp]["accession"]]
+
+def STAR_outprefix(wildcards):
+    prefix = "analysis/star/{sample}.".format(**wildcards)
+    return prefix
 
 rule STAR:
     input:
@@ -282,13 +282,8 @@ rule STAR:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
-<<<<<<< HEAD
-        # path to STAR reference genome index
-        index = units["/{sample/}"]["referenceIndex"],
-	outprefix = "analysis/star/{sample}."
-=======
-        STAR_params
->>>>>>> b364ac8289e500ee43c3e7b10c07cd6e0e3051a3
+	STAR_outprefix
+	# STAR_outprefix
     log:
         "logs/star/{sample}.log"
     benchmark:
@@ -303,12 +298,12 @@ rule STAR:
         """
         STAR \
         --runThreadN {threads} \
-        --genomeDir {params[0]} \
+        --genomeDir {params} \
         --readFilesIn {input} \
         --twopassMode Basic \
         --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate \
-        --outFileNamePrefix {params[1]} \
+        --outFileNamePrefix {params} \
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
