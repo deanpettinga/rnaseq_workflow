@@ -14,8 +14,6 @@ configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
 units = pd.read_table(config["units"]).set_index("sample", drop=False)
-print(units.loc["arikara_node_3"]["accession"])
-print(config["ref"]["index"][units.loc["nebraska_node_2"]["accession"]])
 
 var_calling_units = pd.read_table("bin/variant_calling_units.tsv").set_index("unit", drop=False)
 
@@ -307,7 +305,6 @@ rule STAR:
         --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate \
         --outFileNamePrefix {params.outprefix} \
-        --outFileNamePrefix {params} \
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
