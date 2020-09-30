@@ -17,9 +17,9 @@ output:
     df_print: paged
 ---
 ```{r logging}
-log <- file(snakemake@log[[1]], open="wt")
-sink(log)
-sink(log, type="message")
+# log <- file(snakemake@log[[1]], open="wt")
+# sink(log)
+# sink(log, type="message")
 ```
 
 ```{r setup, include=FALSE}
@@ -30,7 +30,7 @@ knitr::opts_chunk$set(
 	cache = TRUE
 )
 # for knit testing in RStudio server
-#knitr::opts_knit$set(root.dir = "../")
+knitr::opts_knit$set(root.dir = "../")
 ```
 
 ```{r load_libs}
@@ -43,8 +43,8 @@ library(ggrepel)
 # for bbcRNA tutorial
 library(bbcRNA)
 library(SummarizedExperiment)
-library(org.Mm.eg.db)# load the org.db for your organism
-library(org.Hs.eg.db)
+# library(org.Mm.eg.db)# load the org.db for your organism
+# library(org.Hs.eg.db)
 library(enrichplot)
 ```
 
@@ -63,7 +63,7 @@ if(config$strandedness == "unstranded"){
 }else{stop("config$strandedness=='",config$strandedness,"'.This is an invalid value. Needs to be one of: 'unstranded','forward','reverse'")}
 
 count_matrix <- star_to_mat(dir = "analysis/star/",
-                     rgx = "^[0-9]*", column = star_col)
+                     rgx = "^[^_]+_[^_]+_[^\\.]+", column = star_col)
 ```
 
 # Experimental Design
@@ -81,7 +81,7 @@ bbc_obj <- BbcSE(counts = count_matrix)
 # get column metadata
 #col_meta <- read_col_meta("../bin/units.tsv")
 col_meta <- read.table(config$units,header=T) %>%
-  dplyr::select(-c(fq1,fq2,unit)) %>%
+  dplyr::select(-c(fq1,fq2)) %>%
   dplyr::distinct() %>%
   remove_rownames() %>%
   column_to_rownames(var="sample")
@@ -100,7 +100,7 @@ knitr::kable(colData(bbc_obj)) %>%
 
 ```{r get_mapping_rates}
 aln_metrics <- read_star_aln_metrics(dir = "analysis/star/",
-                                 rgx = "^[0-9]*")
+                                 rgx = "^[^_]+_[^_]+_[^\\.]+")
 # store the mapping metrics in the BbcSE object
 aln_metrics(bbc_obj) <- aln_metrics
 if (!validObject(bbc_obj)){
