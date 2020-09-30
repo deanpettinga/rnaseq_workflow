@@ -8,39 +8,24 @@ logs/*
 !logs/runs/.keep
 !logs/.keep
 
-raw_data/*
-!raw_reads/.keep
-
-analysis/*
 benchmarks/*
+!benchmarks/.keep
+
+raw_data/*
+!raw_data/.keep
+
+analysis/star/*
+!analysis/star/.keep
+analysis/trimmed_data/*
+!analysis/trimmed_data/.keep
+
 
 deliverables/*
 !deliverables/.keep
 
-src/diffExp_cache
-src/diffExp_files
-src/diffExp.html
-src/ensembl_go.txt
-src/r_objects/*
-!src/r_objects/.keep
-src/._*
-src/._edgeR_longReport.html
-src/edgeR_longReport_v1.html
-src/symlink.R
-
-rules/.R
-rules/r_objects
-
-#testing files
 tmp/*
-test.py
-units_se.tsv
 
-#results
-rules/diffExp_cache
-rules/diffExp_files
-rules/diffExp.html
-rules/._*
-
-*test*
 STARmanual*
+.Rproj.user
+.RData
+.Rhistory
