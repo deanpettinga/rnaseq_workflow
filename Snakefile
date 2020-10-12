@@ -335,8 +335,7 @@ rule STAR_dedup:
         samtools sort -@ {resources.threads} -n {input} |\
         samtools view -h |\
         samblaster --removeDups |\
-        samtools view -Sb - > {output.bam}
-
+        samtools view -Sb - 1> {output.bam} 2> {log}
         samtools index -b -@ {resources.threads} {output.bam}"
         """
 

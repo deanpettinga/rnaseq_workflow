@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 	cache = TRUE
 )
 # for knit testing in RStudio server
-knitr::opts_knit$set(root.dir = "../")
+#knitr::opts_knit$set(root.dir = "../")
 ```
 
 ```{r load_libs}
@@ -49,8 +49,8 @@ library(VennDiagram)
 ```
 
 ```{r config}
-config <- yaml.load_file(here("bin/config.yaml"))
-annotation <- read_tsv(here("bin/annotation.tsv"))
+config <- yaml.load_file("config.yaml")
+annotation <- read_tsv("annotation.tsv")
 ```
 
 ```{r}
@@ -209,24 +209,7 @@ rowData(bbc_obj) <- data.frame(gene=rownames(bbc_obj)) %>% dplyr::mutate(gene=st
 rowData(bbc_obj)
 ```
 
-
 # Differential Expression
-
-```{r DE_function}
-run_de <- function(DE_obj, contrast_name){
-  # establish variables
-  contrast_tbl = read_tsv(here(config$contrasts))
-  contrast_list = contrast_tbl %>% dplyr::filter(name==contrast_name) %>% .[,2:4] %>% unlist(use.names = FALSE)
-  # run DE
-  DE_obj <- findDEGs(DE_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = contrast_list,
-                      lfc = config$logfc.filter)
-  return(DE_obj)
-  }
-```
 
 ## Leaf
 
@@ -236,11 +219,252 @@ bbc_obj <- findDEGs(bbc_obj,
                       de_pkg = "edger",
                       test = "glmTreat",
                       design = "~0+group",
-                      contrasts = contrast_list[i],
+                      contrasts = list(c("group","arikara_leaf","nebraska_leaf")),
                       lfc = config$logfc.filter)
 
+
+# show pval distribution
 print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_leaf_-_nebraska_leaf`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("leaf", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-leaf.tsv")
+
 ```
+
+## Meristem
+
+```{r}
+#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_meristem","nebraska_meristem")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_meristem_-_nebraska_meristem`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("meristem", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-meristem.tsv")
+
+```
+
+## Node
+
+```{r}
+#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_node","nebraska_node")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_node_-_nebraska_node`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-node.tsv")
+
+```
+
+## Root
+
+```{r}
+
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_root","nebraska_root")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_root_-_nebraska_root`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-root.tsv")
+
+```
+
+## Shoot
+
+```{r}
+
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_shoot","nebraska_shoot")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_shoot_-_nebraska_shoot`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-shoot.tsv")
+
+```
+
+## Seedcoat
+
+```{r}
+
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_seedcoat","nebraska_seedcoat")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_seedcoat_-_nebraska_seedcoat`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-seedcoat.tsv")
+
+```
+
+## Endosperm
+
+```{r}
+#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_endosperm","nebraska_endosperm")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_endosperm_-_nebraska_endosperm`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-endosperm.tsv")
+
+```
+
+## earlyBudding
+
+```{r}
+
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_earlyBudding","nebraska_earlyBudding")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_earlyBudding_-_nebraska_earlyBudding`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-earlyBudding.tsv")
+
+```
+
+## lateBudding
+
+```{r}
+#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = list(c("group","arikara_lateBudding","nebraska_lateBudding")),
+                      lfc = config$logfc.filter)
+
+
+# show pval distribution
+print(plot_pval_distrib(bbc_obj))
+
+# get results: gene, logFC, 
+results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_lateBudding_-_nebraska_lateBudding`$table),
+                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
+                        as.data.frame() %>% 
+                        dplyr::select_if(grepl("node", names(.)))) %>%
+  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
+  dplyr::select(-c(unshrunk.logFC))
+
+# write results to file
+write_tsv(results.leaf, path= "../deliverables/DE-lateBudding.tsv")
+
+```
+
+
+
 
 
 ```{r , eval=FALSE, include=FALSE, results='asis'}
