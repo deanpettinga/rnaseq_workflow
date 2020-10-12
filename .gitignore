@@ -14,6 +14,8 @@ benchmarks/*
 raw_data/*
 !raw_data/.keep
 
+analysis/multiqc/*
+!analysis/multiqc/.keep
 analysis/star/*
 !analysis/star/.keep
 analysis/trimmed_data/*
@@ -29,3 +31,6 @@ STARmanual*
 .Rproj.user
 .RData
 .Rhistory
+
+bin/diffExp_*
+bin/.diffExp.html*

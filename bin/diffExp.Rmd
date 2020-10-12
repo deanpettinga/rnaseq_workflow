@@ -16,13 +16,11 @@ output:
     number_sections: true
     df_print: paged
 ---
-```{r logging}
+
+```{r setup}
 # log <- file(snakemake@log[[1]], open="wt")
 # sink(log)
 # sink(log, type="message")
-```
-
-```{r setup, include=FALSE}
 knitr::opts_chunk$set(
 	echo = TRUE,
 	message = FALSE,
@@ -35,25 +33,46 @@ knitr::opts_knit$set(root.dir = "../")
 
 ```{r load_libs}
 # my packages
+library(here)
 library(tidyverse)
+library(vroom)
 library(yaml)
 library(kableExtra)
 library(ggrepel)
-
 # for bbcRNA tutorial
 library(bbcRNA)
 library(SummarizedExperiment)
 # library(org.Mm.eg.db)# load the org.db for your organism
 # library(org.Hs.eg.db)
 library(enrichplot)
+library(VennDiagram)
 ```
 
 ```{r config}
-config <- yaml.load_file("bin/config.yaml")
-annotation <- read_tsv("bin/annotation.tsv")
+config <- yaml.load_file(here("bin/config.yaml"))
+annotation <- read_tsv(here("bin/annotation.tsv"))
+```
+
+```{r}
+# genes.nebraska <- vroom("analysis/star/nebraska_earlyBudding_102.ReadsPerGene.out.tab", 
+#                          skip = 4, col_names = c("gene","unstranded","forward","reverse")) %>%
+#   dplyr::select("gene")
+# 
+# genes.arikara <- vroom("analysis/star/arikara_earlyBudding_16.ReadsPerGene.out.tab", 
+#                         skip = 4, col_names = c("gene","unstranded","forward","reverse")) %>%
+#   dplyr::select("gene")
+# 
+# print(paste("unique to Arikara:",length(genes.arikara[["gene"]])))
+# print(paste("unique to NE:",length(genes.nebraska[["gene"]])))
+# 
+# print(paste("unique to Arikara:",nrow(dplyr::anti_join(genes.arikara,genes.nebraska))))
+# print(paste("unique to Nebraska:",nrow(dplyr::anti_join(genes.nebraska,genes.arikara))))
+# print(paste("common to both:",nrow(dplyr::inner_join(genes.nebraska,genes.arikara))))
+
 ```
 
 ```{r import_counts}
+
 if(config$strandedness == "unstranded"){
   star_col <- 1
 }else if(config$strandedness == "forward"){
@@ -62,13 +81,22 @@ if(config$strandedness == "unstranded"){
   star_col <- 3
 }else{stop("config$strandedness=='",config$strandedness,"'.This is an invalid value. Needs to be one of: 'unstranded','forward','reverse'")}
 
-count_matrix <- star_to_mat(dir = "analysis/star/",
+count_matrix.nebraska <- star_to_mat(dir = "../analysis/star/nebraska/",
                      rgx = "^[^_]+_[^_]+_[^\\.]+", column = star_col)
+count_matrix.arikara <- star_to_mat(dir = "../analysis/star/arikara",
+                     rgx = "^[^_]+_[^_]+_[^\\.]+", column = star_col)
+
+#count_matrix <- count_matrix.nebraska
+count_matrix <- dplyr::inner_join(as.data.frame(count_matrix.arikara) %>% rownames_to_column(var="gene"),
+                  as.data.frame(count_matrix.nebraska) %>% rownames_to_column(var="gene")) %>%
+  column_to_rownames(var="gene") %>%
+  as.matrix()
+
 ```
 
 # Experimental Design
 
-``` {r Make_BbcSE_object}
+```{r Make_BbcSE_object}
 # bbc_obj <- BbcSE(counts = tcell, granges = granges)
 bbc_obj <- BbcSE(counts = count_matrix)
 
@@ -80,7 +108,7 @@ bbc_obj <- BbcSE(counts = count_matrix)
 
 # get column metadata
 #col_meta <- read_col_meta("../bin/units.tsv")
-col_meta <- read.table(config$units,header=T) %>%
+col_meta <- read.table(here(config$units),header=T) %>%
   dplyr::select(-c(fq1,fq2)) %>%
   dplyr::distinct() %>%
   remove_rownames() %>%
@@ -99,7 +127,7 @@ knitr::kable(colData(bbc_obj)) %>%
 # Quality Control
 
 ```{r get_mapping_rates}
-aln_metrics <- read_star_aln_metrics(dir = "analysis/star/",
+aln_metrics <- read_star_aln_metrics(dir = "../analysis/star/",
                                  rgx = "^[^_]+_[^_]+_[^\\.]+")
 # store the mapping metrics in the BbcSE object
 aln_metrics(bbc_obj) <- aln_metrics
@@ -112,34 +140,43 @@ kable(aln_metrics) %>%
 
 ```
 
-```{r plot_alignment_rates}
+```{r plot_alignment_rates, fig.width=12, fig.height=9}
+
 # unique map reads
+bbc_obj@aln_metrics
 plot_aln_metrics(x = bbc_obj,
                  type = "uniq_aln_reads",
-                 facet_by="group",
-                 fill="group") +
-  ggplot2::theme(legend.position = "none")
+                 facet_by="tissue",
+                 fill="accession") +
+  ggplot2::theme(legend.position = "right")
 #unique map rates
 plot_aln_metrics(x = bbc_obj,
                  type = "uniq_map_rate",
-                 facet_by="group",
-                 fill="group") +
-  ggplot2::theme(legend.position = "none")
+                 facet_by="tissue",
+                 fill="accession") +
+  ggplot2::theme(legend.position = "right")
 
 ```
 
-```{r add_gene_annotations}
-# Add gene symbols
-bbc_obj <- ens2sym(bbc_obj, org.Mm.eg.db)
+<!-- ```{r add_gene_annotations} -->
 
-# Get Entrez IDs for gene set analyses after DE genes are identified
-bbc_obj <- ens2entrez(bbc_obj, org.Mm.eg.db)
-#rowData(bbc_obj)
+<!-- # Add gene symbols -->
 
-if (!validObject(bbc_obj)){
-  knitr::knit_exit("ERROR: bbc_obj was no longer valid after adding gene annotations")
-}
-```
+<!-- bbc_obj <- ens2sym(bbc_obj, org.Mm.eg.db) -->
+
+<!-- # Get Entrez IDs for gene set analyses after DE genes are identified -->
+
+<!-- bbc_obj <- ens2entrez(bbc_obj, org.Mm.eg.db) -->
+
+<!-- #rowData(bbc_obj) -->
+
+<!-- if (!validObject(bbc_obj)){ -->
+
+<!--   knitr::knit_exit("ERROR: bbc_obj was no longer valid after adding gene annotations") -->
+
+<!-- } -->
+
+<!-- ``` -->
 
 ```{r make_DGEList_object}
 # by default, low expression genes filtered out, normalization factors
@@ -155,27 +192,67 @@ cat("*",nrow(dgelist(edger(bbc_obj))),"features/genes assessed after trimming.")
 
 ```{r PCA}
 set.seed(100) # adonis uses permutations. Set seed to make reproducible.
-pca_plots <- plot_PCA(bbc_obj, color_by="group", shape_by="group", adonis_by="group")
-pca_plots[[1]] +
-  geom_label_repel(aes(label = sample),
-                   box.padding   = 0.35,
-                   point.padding = 0.5,
-                   segment.color = 'grey50')
+pca_plots <- plot_PCA(bbc_obj, color_by="tissue",shape_by="accession", adonis_by="tissue")
+pca_plots[[1]] #+
+  # geom_label_repel(aes(label = replicate),
+  #                  box.padding   = 0.35,
+  #                  point.padding = 0.5,
+  #                  segment.color = 'grey50')
 pca_plots[[2]]
 
 ```
 
+## Annotate Genes
+```{r}
+rowData(bbc_obj) <- data.frame(gene=rownames(bbc_obj)) %>% dplyr::mutate(gene=str_remove(gene,"gene:")) %>% DataFrame(.)
+
+rowData(bbc_obj)
+```
 
 
-```{r edgeR_run_contrasts, results='asis'}
+# Differential Expression
+
+```{r DE_function}
+run_de <- function(DE_obj, contrast_name){
+  # establish variables
+  contrast_tbl = read_tsv(here(config$contrasts))
+  contrast_list = contrast_tbl %>% dplyr::filter(name==contrast_name) %>% .[,2:4] %>% unlist(use.names = FALSE)
+  # run DE
+  DE_obj <- findDEGs(DE_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = contrast_list,
+                      lfc = config$logfc.filter)
+  return(DE_obj)
+  }
+```
+
+## Leaf
+
+```{r}
+#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
+bbc_obj <- findDEGs(bbc_obj,
+                      de_pkg = "edger",
+                      test = "glmTreat",
+                      design = "~0+group",
+                      contrasts = contrast_list[i],
+                      lfc = config$logfc.filter)
+
+print(plot_pval_distrib(bbc_obj))
+```
+
+
+```{r , eval=FALSE, include=FALSE, results='asis'}
 # import the contrasts.tsv
 contrast_tbl = read_tsv(config$contrasts)
 
 contrast_list <- list()
+i=1
 for (i in 1:nrow(contrast_tbl)){
   contrast_list[[i]] <- c(contrast_tbl[i,]$meta_col,
-                          contrast_tbl[i,]$relative,
-                          contrast_tbl[i,]$baseline)
+                          contrast_tbl[i,]$numerator,
+                          contrast_tbl[i,]$denominator)
 }
 
 # loop through the comparisons
@@ -196,10 +273,10 @@ for (i in 1:length(contrast_tbl$name)){
                       lfc = config$logfc.filter)
 
     # plot p-val distribution -------------------------------------------------------------
-
     print(plot_pval_distrib(bbc_obj))
+    #plot_volcano(bbc_obj)  
     cat("\n\n")
-
+# 
     # get DE table------------------------------------------------------------------------
     de_res <- get_de_table(bbc_obj, de_pkg = "edger")
 
@@ -218,73 +295,74 @@ for (i in 1:length(contrast_tbl$name)){
                   dplyr::filter(ensembl_id %in% rownames(top_genes$table)),
                 caption="Top 20 Differentially Expressed Genes") %>%
       kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")))
-
-    # plot heatmap-------------------------------------------------------------------------
-
-    cat("### Heatmap \n\n")
-
-    cat("Clustered Heatmap of Top 20 Differentially Expressed Genes. \n\n")
-    # # get the sign of the LFC and store in rowData
-    # ## get the de_results slot of the BbcEdgeR object
-    # bbc_de_res <- de_results(edger(bbc_obj))
-    # ## get contrast results
-    # de_table <- bbc_de_res[[2]]$table
-    # ## get the LFC sign
-    # contrast_sign <- ifelse(de_table$logFC > 0, "up", "down")
-    # names(contrast_sign) <- rownames(de_table)
-    # ## store LFC sign in rowData. Genes with no matches will be NA.
-    # rowData(bbc_obj)$mut_vs_WT_sign <- contrast_sign[match(rownames(bbc_obj), names(contrast_sign))]
-    # paste0(contrast_tbl[i,]$relative,"_vs_",contrast_tbl[i,]$baseline,"_sign")
-    # plot Zscores of normalized log2 cpms
-    print(plot_heatmap(x = bbc_obj, genes = rownames(top_genes$table), zscores=TRUE,
-                 # rowdata_annot = paste0(contrast_tbl[i,]$relative,"_vs_",
-                 #                        contrast_tbl[i,]$baseline,"_sign"),
-                 # coldata_annot = "group",
-                 # rowdata_split = paste0(contrast_tbl[i,]$relative,"_vs_",
-                 #                        contrast_tbl[i,]$baseline,"_sign"),
-                 # coldata_split="",
-                 gene_labels = "uniq_syms"))
-    cat("\n\n")
-    # Enrichment Analysis-------------------------------------------------------------------------
-    cat("### Enrichment Analysis \n\n")
-    # set seed to make GSEA deterministic
-    set.seed(42)
-
-    # Hallmarks
-    H_gsea_results_list <- run_gsea(x = bbc_obj,
-                                    de_pkg = "edger",
-                                    gene_set = "H",
-                                    orgDb = dplyr::filter(annotation, common_name==config$common_name)$org.db,
-                                    organism = dplyr::filter(annotation, common_name==config$common_name)$species)
-
-    if (length(H_gsea_results_list[[1]]@result$ID) > 0){
-      enrichplot::dotplot(H_gsea_results_list[[1]],
-                          showCategory=10,
-                          title="Top gene sets",
-                          split=".sign") +
-        facet_grid(.~.sign)
-    } else{cat("No significant enrichment of Hallmark Gene Sets. \n\n")}
-
-    # KEGG
-    kegg_gsea_results_list <- run_gsea(x = bbc_obj,
-                                de_pkg = "edger",
-                                gene_set = "kegg",
-                                orgDb = dplyr::filter(annotation, common_name==config$common_name)$org.db,
-                                organism = dplyr::filter(annotation, common_name==config$common_name)$kegg,
-                                minGSSize = 30,
-                                use_internal_data = FALSE)
-
-      if (length(kegg_gsea_results_list[[1]]@result$ID) > 0){
-        enrichplot::dotplot(kegg_gsea_results_list[[1]],
-                            showCategory=10,
-                            title="Top gene sets",
-                            split=".sign") +
-          facet_grid(.~.sign)
-    } else{cat("No significant enrichment of KEGG Gene Sets. \n\n")}
+# 
+#     # plot heatmap-------------------------------------------------------------------------
+# 
+#     cat("### Heatmap \n\n")
+# 
+#     cat("Clustered Heatmap of Top 20 Differentially Expressed Genes. \n\n")
+#     # # get the sign of the LFC and store in rowData
+#     # ## get the de_results slot of the BbcEdgeR object
+#     # bbc_de_res <- de_results(edger(bbc_obj))
+#     # ## get contrast results
+#     # de_table <- bbc_de_res[[2]]$table
+#     # ## get the LFC sign
+#     # contrast_sign <- ifelse(de_table$logFC > 0, "up", "down")
+#     # names(contrast_sign) <- rownames(de_table)
+#     # ## store LFC sign in rowData. Genes with no matches will be NA.
+#     # rowData(bbc_obj)$mut_vs_WT_sign <- contrast_sign[match(rownames(bbc_obj), names(contrast_sign))]
+#     # paste0(contrast_tbl[i,]$relative,"_vs_",contrast_tbl[i,]$baseline,"_sign")
+#     # plot Zscores of normalized log2 cpms
+#     print(plot_heatmap(x = bbc_obj, genes = rownames(top_genes$table), zscores=TRUE,
+#                  # rowdata_annot = paste0(contrast_tbl[i,]$relative,"_vs_",
+#                  #                        contrast_tbl[i,]$baseline,"_sign"),
+#                  # coldata_annot = "group",
+#                  # rowdata_split = paste0(contrast_tbl[i,]$relative,"_vs_",
+#                  #                        contrast_tbl[i,]$baseline,"_sign"),
+#                  # coldata_split="",
+#                  gene_labels = "uniq_syms"))
+#     cat("\n\n")
+#     # # Enrichment Analysis-------------------------------------------------------------------------
+#     # cat("### Enrichment Analysis \n\n")
+#     # # set seed to make GSEA deterministic
+#     # set.seed(42)
+#     # 
+#     # # Hallmarks
+#     # H_gsea_results_list <- run_gsea(x = bbc_obj,
+#     #                                 de_pkg = "edger",
+#     #                                 gene_set = "H",
+#     #                                 orgDb = dplyr::filter(annotation, common_name==config$common_name)$org.db,
+#     #                                 organism = dplyr::filter(annotation, common_name==config$common_name)$species)
+#     # 
+#     # if (length(H_gsea_results_list[[1]]@result$ID) > 0){
+#     #   enrichplot::dotplot(H_gsea_results_list[[1]],
+#     #                       showCategory=10,
+#     #                       title="Top gene sets",
+#     #                       split=".sign") +
+#     #     facet_grid(.~.sign)
+#     # } else{cat("No significant enrichment of Hallmark Gene Sets. \n\n")}
+#     # 
+#     # # KEGG
+#     # kegg_gsea_results_list <- run_gsea(x = bbc_obj,
+#     #                             de_pkg = "edger",
+#     #                             gene_set = "kegg",
+#     #                             orgDb = dplyr::filter(annotation, common_name==config$common_name)$org.db,
+#     #                             organism = dplyr::filter(annotation, common_name==config$common_name)$kegg,
+#     #                             minGSSize = 30,
+#     #                             use_internal_data = FALSE)
+#     # 
+#     #   if (length(kegg_gsea_results_list[[1]]@result$ID) > 0){
+#     #     enrichplot::dotplot(kegg_gsea_results_list[[1]],
+#     #                         showCategory=10,
+#     #                         title="Top gene sets",
+#     #                         split=".sign") +
+#     #       facet_grid(.~.sign)
+#     # } else{cat("No significant enrichment of KEGG Gene Sets. \n\n")}
 }
 ```
 
 # Session Info
+
 ```{r sessionInfo}
 sessionInfo()
 ```

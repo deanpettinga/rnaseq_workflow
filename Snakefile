@@ -84,6 +84,9 @@ rule all:
         # multiQC
         "analysis/multiqc/multiqc_report.html",
 
+        # testing for optical duplicates
+        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -308,8 +311,37 @@ rule STAR:
         --quantMode GeneCounts \
         --outStd Log 2> {log}
 
-        samtools index {output.bam}
+        samtools index -b -@ {resources.threads} {output.bam}
         """
+
+rule STAR_dedup:
+    input:
+        "analysis/star/{sample}.Aligned.sortedByCoord.out.bam",
+    output:
+        bam = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam",
+        bai = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam.bai",
+    log:
+        "logs/STAR_dedup/{sample}.log"
+    benchmark:
+        "benchmarks/STAR_dedup/{sample}.txt"
+    conda:
+        "envs/samblaster.yaml"
+    resources:
+        threads = 8,
+        nodes =   1,
+        mem_gb =  64
+    shell:
+        """
+        samtools sort -@ {resources.threads} -n {input} |\
+        samtools view -h |\
+        samblaster --removeDups |\
+        samtools view -Sb - > {output.bam}
+
+        samtools index -b -@ {resources.threads} {output.bam}"
+        """
+
+
+
 
 multiqc_input = []
 if config["PE_or_SE"] =="SE":
