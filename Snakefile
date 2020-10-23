@@ -321,7 +321,7 @@ rule STAR_dedup:
         bam = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam",
         bai = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam.bai",
     log:
-        "logs/_dedup/{sample}.log"
+        "logs/STAR_dedup/{sample}.log"
     benchmark:
         "benchmarks/STAR_dedup/{sample}.txt"
     conda:
@@ -338,9 +338,6 @@ rule STAR_dedup:
         samtools view -Sb - 1> {output.bam} 2>> {log}
         samtools index -b -@ {resources.threads} {output.bam} 2>> {log}
         """
-
-
-
 
 multiqc_input = []
 if config["PE_or_SE"] =="SE":
