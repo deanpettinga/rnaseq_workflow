@@ -45,7 +45,6 @@ library(SummarizedExperiment)
 # library(org.Mm.eg.db)# load the org.db for your organism
 # library(org.Hs.eg.db)
 library(enrichplot)
-library(VennDiagram)
 ```
 
 ```{r config}
@@ -53,22 +52,103 @@ config <- yaml.load_file("config.yaml")
 annotation <- read_tsv("annotation.tsv")
 ```
 
-```{r}
-# genes.nebraska <- vroom("analysis/star/nebraska_earlyBudding_102.ReadsPerGene.out.tab", 
-#                          skip = 4, col_names = c("gene","unstranded","forward","reverse")) %>%
-#   dplyr::select("gene")
-# 
-# genes.arikara <- vroom("analysis/star/arikara_earlyBudding_16.ReadsPerGene.out.tab", 
-#                         skip = 4, col_names = c("gene","unstranded","forward","reverse")) %>%
-#   dplyr::select("gene")
-# 
-# print(paste("unique to Arikara:",length(genes.arikara[["gene"]])))
-# print(paste("unique to NE:",length(genes.nebraska[["gene"]])))
-# 
-# print(paste("unique to Arikara:",nrow(dplyr::anti_join(genes.arikara,genes.nebraska))))
-# print(paste("unique to Nebraska:",nrow(dplyr::anti_join(genes.nebraska,genes.arikara))))
-# print(paste("common to both:",nrow(dplyr::inner_join(genes.nebraska,genes.arikara))))
+```{r functions}
+get_DE_results <- function(summarizedExperiment, tissue, contrast.group1, contrast.group2, logFC){
+  # setup contrast name from experimental groups (contrast.group1 is numerator, contrast.group2 is denominator)
+  contrast.name = paste0("group_",contrast.group1,"_",tissue,"_-_",contrast.group2,"_",tissue)
+  
+  # run DE with bbcRNA function findDEGs() using glmQLFTest function and logFC cutoff from config (default logFC==1)
+  summarizedExperiment.wDE = findDEGs(summarizedExperiment,
+                                     de_pkg = "edger",
+                                     test = "glmQLFTest",
+                                     design = "~0+group",
+                                     contrasts = list(c("group", paste0(contrast.group1,"_",tissue), paste0(contrast.group2,"_",tissue))),
+                                     lfc = logFC)
 
+  # get the contents from the de_results slot, removing the fit object (1st element)
+  DE_table = de_results(edger(summarizedExperiment.wDE))[-1]
+  
+  # make results data.frame with DE stats and logCPM values
+  DE_results = dplyr::left_join(
+    # get results for current contrast.name
+    edgeR::topTags(DE_table[[contrast.name]],
+                   # include all genes in results
+                   n = nrow(dgelist(edger(summarizedExperiment.wDE)))) %>%
+      as.data.frame(stringsAsFactors = FALSE) %>% 
+      rownames_to_column(var="gene"),
+    # and join logCPM values 
+    summarizedExperiment.wDE@edger@norm_cts@assays@data$norm_log_cpm %>% 
+      as.data.frame() %>% 
+      select_if(grepl(tissue, names(.))) %>% 
+      rownames_to_column(var="gene"),
+    # join by "gene" column
+    by="gene") %>%
+  # and remove prefix "gene:" from gene column
+  dplyr::mutate(gene=str_remove(gene,"gene:"))
+  
+  # return both summarizedExperiment object and DE_results data.frame in a list
+  return(list(summarizedExperiment.wDE, DE_results))
+}
+
+plot.volcano <-function(DE_results.tissue){
+  DE_results.tissue[[2]] %>% 
+    # add significance and logFC criteria for plotting
+    dplyr::mutate(Significance = factor(case_when(
+      (FDR < 0.05) & (abs(logFC) > 1) ~ "logFC>1 & FDR<0.05",
+      (FDR > 0.05) & (abs(logFC) > 1) ~ "logFC>1 only",
+      (FDR < 0.05) & (abs(logFC) < 1) ~ "FDR<0.05 only",
+      (FDR > 0.05) & (abs(logFC) < 1) ~ "NS"),
+      levels = c("logFC>1 & FDR<0.05","logFC>1 only","FDR<0.05 only", "NS"))) %>%
+    # now ggplot
+    ggplot(.) +
+      geom_point(aes(x=logFC, y=-log10(FDR), color=Significance, label=gene)) +
+      theme_light() + ggthemes::scale_color_wsj(palette = "rgby")
+}
+
+plot.MD <-function(DE_results.tissue){
+  DE_results.tissue[[2]] %>% 
+    # add significance and logFC criteria for plotting
+    dplyr::mutate(Significance = factor(case_when(
+      (FDR < 0.05) & (abs(logFC) > 1) ~ "logFC>1 & FDR<0.05",
+      (FDR > 0.05) & (abs(logFC) > 1) ~ "logFC>1 only",
+      (FDR < 0.05) & (abs(logFC) < 1) ~ "FDR<0.05 only",
+      (FDR > 0.05) & (abs(logFC) < 1) ~ "NS"),
+      levels = c("logFC>1 & FDR<0.05","logFC>1 only","FDR<0.05 only", "NS"))) %>%
+    # now ggplot
+    ggplot(.) +
+      geom_point(aes(x=logCPM, y=logFC, color=Significance, label=gene)) +
+      theme_light() + ggthemes::scale_color_wsj(palette = "rgby")
+}
+```
+
+## Compare References
+
+```{r}
+genes.HanXRQr2 <- read_tsv("../analysis/ref-gene-compare/HanXRQr2.0-SUNRISE-2.1.genes.tsv",col_names = "gene") %>% 
+  dplyr::mutate(reference="HanXRQr2")
+genes.arikara <- read_tsv("../analysis/ref-gene-compare/arikara.genes.tsv",col_names = "gene") %>% 
+  dplyr::mutate(gene=str_remove(gene, pattern='";')) %>% 
+  dplyr::mutate(reference="arikara")
+genes.nebraska <- read_tsv("../analysis/ref-gene-compare/nebraska.genes.tsv",col_names = "gene") %>% 
+  dplyr::mutate(gene=str_remove(gene, pattern='";'))%>% 
+  dplyr::mutate(reference="nebraska")
+
+nrow(genes.HanXRQr2)
+nrow(genes.arikara)
+nrow(genes.nebraska)
+
+nrow(dplyr::inner_join(genes.nebraska,genes.arikara, by="gene"))
+
+# genes unique to nebraska
+paste("Unique to Nebraska:",
+      nrow(dplyr::anti_join(genes.nebraska,genes.arikara, by="gene")))
+write_tsv(dplyr::anti_join(genes.nebraska,genes.arikara, by="gene"),
+          path= "../deliverables/unique-genes.nebraska.tsv")
+# genes unique to arikara
+paste("Unique to Arikara:",
+      nrow(dplyr::anti_join(genes.arikara,genes.nebraska, by="gene")))
+write_tsv(dplyr::anti_join(genes.arikara,genes.nebraska, by="gene"),
+          path= "../deliverables/unique-genes.arikara.tsv")
 ```
 
 ```{r import_counts}
@@ -190,6 +270,8 @@ cat("*",nrow(bbc_obj),"total features/genes in the genome. \n\n")
 cat("*",nrow(dgelist(edger(bbc_obj))),"features/genes assessed after trimming.")
 ```
 
+## PCA
+
 ```{r PCA}
 set.seed(100) # adonis uses permutations. Set seed to make reproducible.
 pca_plots <- plot_PCA(bbc_obj, color_by="tissue",shape_by="accession", adonis_by="tissue")
@@ -202,390 +284,195 @@ pca_plots[[2]]
 
 ```
 
-## Annotate Genes
 ```{r}
-rowData(bbc_obj) <- data.frame(gene=rownames(bbc_obj)) %>% dplyr::mutate(gene=str_remove(gene,"gene:")) %>% DataFrame(.)
-
-rowData(bbc_obj)
+# get the loadings
+norm_counts <- norm_cts(edger(bbc_obj))
+pca.loadings <- prcomp(t(norm_counts@assays@data$norm_log_cpm))
+pca.loadings$rotation
 ```
 
+
+```{r annotate_genes}
+rowData(bbc_obj) <- data.frame(gene=rownames(bbc_obj)) %>% dplyr::mutate(gene=str_remove(gene,"gene:")) %>% DataFrame(.)
+```
+
+
 # Differential Expression
+
+## QC
+
+```{r}
+DE_results.test <- get_DE_results(bbc_obj, "leaf", "arikara", "nebraska", config$logfc.filter)
+```
+
+```{r}
+## Biological Coefficient of Variation
+paste("Biological Coefficient of Variation:", sqrt(DE_results.test[[1]]@edger@dgelist$common.dispersion))
+edgeR::plotBCV(DE_results.test[[1]]@edger@dgelist)
+
+```
 
 ## Leaf
 
 ```{r}
-#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_leaf","nebraska_leaf")),
-                      lfc = config$logfc.filter)
+# get DE table
+DE_results.leaf <- get_DE_results(bbc_obj, "leaf", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.leaf[[2]], path= "../deliverables/DE-leaf.tsv")
+```
 
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_leaf_-_nebraska_leaf`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("leaf", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-leaf.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.leaf[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.leaf)
+# MD plot
+plot.MD(DE_results.leaf)
 ```
 
 ## Meristem
 
 ```{r}
-#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_meristem","nebraska_meristem")),
-                      lfc = config$logfc.filter)
+# get DE table
+DE_results.meristem <- get_DE_results(bbc_obj, "meristem", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.meristem[[2]], path= "../deliverables/DE-meristem.tsv")
+```
 
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_meristem_-_nebraska_meristem`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("meristem", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-meristem.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.meristem[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.meristem)
+# MD plot
+plot.MD(DE_results.meristem)
 ```
 
 ## Node
 
 ```{r}
-#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_node","nebraska_node")),
-                      lfc = config$logfc.filter)
+# get DE table
+DE_results.node <- get_DE_results(bbc_obj, "node", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.node[[2]], path= "../deliverables/DE-node.tsv")
+```
 
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_node_-_nebraska_node`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-node.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.node[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.node)
+# MD plot
+plot.MD(DE_results.node)
 ```
 
 ## Root
 
 ```{r}
+# get DE table
+DE_results.root <- get_DE_results(bbc_obj, "root", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.root[[2]], path= "../deliverables/DE-root.tsv")
+```
 
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_root","nebraska_root")),
-                      lfc = config$logfc.filter)
-
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_root_-_nebraska_root`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-root.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.root[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.root)
+# MD plot
+plot.MD(DE_results.root)
 ```
 
 ## Shoot
 
 ```{r}
+# get DE table
+DE_results.shoot <- get_DE_results(bbc_obj, "shoot", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.shoot[[2]], path= "../deliverables/DE-shoot.tsv")
+```
 
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_shoot","nebraska_shoot")),
-                      lfc = config$logfc.filter)
-
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_shoot_-_nebraska_shoot`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-shoot.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.shoot[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.shoot)
+# MD plot
+plot.MD(DE_results.shoot)
 ```
 
 ## Seedcoat
 
 ```{r}
+# get DE table
+DE_results.seedcoat <- get_DE_results(bbc_obj, "seedcoat", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.seedcoat[[2]], path= "../deliverables/DE-seedcoat.tsv")
+```
 
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_seedcoat","nebraska_seedcoat")),
-                      lfc = config$logfc.filter)
-
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_seedcoat_-_nebraska_seedcoat`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-seedcoat.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.seedcoat[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.seedcoat)
+# MD plot
+plot.MD(DE_results.seedcoat)
 ```
 
 ## Endosperm
 
 ```{r}
-#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_endosperm","nebraska_endosperm")),
-                      lfc = config$logfc.filter)
+# get DE table
+DE_results.endosperm <- get_DE_results(bbc_obj, "endosperm", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.endosperm[[2]], path= "../deliverables/DE-endosperm.tsv")
+```
 
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_endosperm_-_nebraska_endosperm`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-endosperm.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.endosperm[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.endosperm)
+# MD plot
+plot.MD(DE_results.endosperm)
 ```
 
 ## earlyBudding
 
 ```{r}
+# get DE table
+DE_results.earlyBudding <- get_DE_results(bbc_obj, "earlyBudding", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.earlyBudding[[2]], path= "../deliverables/DE-earlyBudding.tsv")
+```
 
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_earlyBudding","nebraska_earlyBudding")),
-                      lfc = config$logfc.filter)
-
-
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_earlyBudding_-_nebraska_earlyBudding`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-earlyBudding.tsv")
-
+```{r}
+plot_pval_distrib(DE_results.earlyBudding[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.earlyBudding)
+# MD plot
+plot.MD(DE_results.earlyBudding)
 ```
 
 ## lateBudding
 
 ```{r}
-#bbc_obj <- run_de(bbc_obj, contrast_name="leaf.Ari_over_NE")
-bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = list(c("group","arikara_lateBudding","nebraska_lateBudding")),
-                      lfc = config$logfc.filter)
+# get DE table
+DE_results.lateBudding <- get_DE_results(bbc_obj, "lateBudding", "arikara", "nebraska", config$logfc.filter)
+# write results data.frame to deliverables/
+write_tsv(DE_results.lateBudding[[2]], path= "../deliverables/DE-lateBudding.tsv")
+```
 
+```{r}
+plot_pval_distrib(DE_results.lateBudding[[1]],de_method = "edger")
+# volcano plot
+plot.volcano(DE_results.lateBudding)
+# MD plot
+plot.MD(DE_results.lateBudding)
+```
 
-# show pval distribution
-print(plot_pval_distrib(bbc_obj))
-
-# get results: gene, logFC, 
-results.leaf <- cbind(as.data.frame(bbc_obj@edger@de_results$`group_arikara_lateBudding_-_nebraska_lateBudding`$table),
-                      bbc_obj@edger@norm_cts@assays@data$norm_log_cpm %>% 
-                        as.data.frame() %>% 
-                        dplyr::select_if(grepl("node", names(.)))) %>%
-  rownames_to_column(var="gene") %>% dplyr::mutate(gene= str_remove(gene,pattern="gene:")) %>%
-  dplyr::select(-c(unshrunk.logFC))
-
-# write results to file
-write_tsv(results.leaf, path= "../deliverables/DE-lateBudding.tsv")
-
+## RData
+```{r}
+write_tsv(as.data.frame(assay(bbc_obj@edger@norm_cts)) %>% rownames_to_column(var="gene"), "../deliverables/norm_log_cpm.tsv")
+save.image(file = "diffExp.RData")
 ```
 
 
-
-
-
-```{r , eval=FALSE, include=FALSE, results='asis'}
-# import the contrasts.tsv
-contrast_tbl = read_tsv(config$contrasts)
-
-contrast_list <- list()
-i=1
-for (i in 1:nrow(contrast_tbl)){
-  contrast_list[[i]] <- c(contrast_tbl[i,]$meta_col,
-                          contrast_tbl[i,]$numerator,
-                          contrast_tbl[i,]$denominator)
-}
-
-# loop through the comparisons
-for (i in 1:length(contrast_tbl$name)){
-  cat("# ",contrast_tbl$name[i],"\n\n")
-
-  cat("## Differential Expression \n\n")
-
-  cat("Differential Expression was performed using the `glmTreat` framework in `edgeR`. \n\n")
-  cat("First, we check the distribution of p-values from the performed tests to confirm that the tests ran successfully. For `glmTreat` tests, we expect to see a steep slope downward from p=0 and a rise toward p=1. The rise for very high p-values represents the genes with differential expression values less than our defined cutoff value, log2FC >", config$logfc.filter,".\n\n")
-
-  # run the comparison
-  bbc_obj <- findDEGs(bbc_obj,
-                      de_pkg = "edger",
-                      test = "glmTreat",
-                      design = "~0+group",
-                      contrasts = contrast_list[i],
-                      lfc = config$logfc.filter)
-
-    # plot p-val distribution -------------------------------------------------------------
-    print(plot_pval_distrib(bbc_obj))
-    #plot_volcano(bbc_obj)  
-    cat("\n\n")
-# 
-    # get DE table------------------------------------------------------------------------
-    de_res <- get_de_table(bbc_obj, de_pkg = "edger")
-
-    # write the DE table to file
-    write_delim(de_res[[1]],
-                paste0("deliverables/DE_",contrast_tbl$name[i],".tsv"),
-                delim="\t")
-    # print 20 top_genes from DE table
-    top_genes <- edgeR::topTags(
-      de_results(edger(bbc_obj))[[2]],
-      n=20)
-
-
-
-    print(kable(de_res[[1]] %>%
-                  dplyr::filter(ensembl_id %in% rownames(top_genes$table)),
-                caption="Top 20 Differentially Expressed Genes") %>%
-      kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")))
-# 
-#     # plot heatmap-------------------------------------------------------------------------
-# 
-#     cat("### Heatmap \n\n")
-# 
-#     cat("Clustered Heatmap of Top 20 Differentially Expressed Genes. \n\n")
-#     # # get the sign of the LFC and store in rowData
-#     # ## get the de_results slot of the BbcEdgeR object
-#     # bbc_de_res <- de_results(edger(bbc_obj))
-#     # ## get contrast results
-#     # de_table <- bbc_de_res[[2]]$table
-#     # ## get the LFC sign
-#     # contrast_sign <- ifelse(de_table$logFC > 0, "up", "down")
-#     # names(contrast_sign) <- rownames(de_table)
-#     # ## store LFC sign in rowData. Genes with no matches will be NA.
-#     # rowData(bbc_obj)$mut_vs_WT_sign <- contrast_sign[match(rownames(bbc_obj), names(contrast_sign))]
-#     # paste0(contrast_tbl[i,]$relative,"_vs_",contrast_tbl[i,]$baseline,"_sign")
-#     # plot Zscores of normalized log2 cpms
-#     print(plot_heatmap(x = bbc_obj, genes = rownames(top_genes$table), zscores=TRUE,
-#                  # rowdata_annot = paste0(contrast_tbl[i,]$relative,"_vs_",
-#                  #                        contrast_tbl[i,]$baseline,"_sign"),
-#                  # coldata_annot = "group",
-#                  # rowdata_split = paste0(contrast_tbl[i,]$relative,"_vs_",
-#                  #                        contrast_tbl[i,]$baseline,"_sign"),
-#                  # coldata_split="",
-#                  gene_labels = "uniq_syms"))
-#     cat("\n\n")
-#     # # Enrichment Analysis-------------------------------------------------------------------------
-#     # cat("### Enrichment Analysis \n\n")
-#     # # set seed to make GSEA deterministic
-#     # set.seed(42)
-#     # 
-#     # # Hallmarks
-#     # H_gsea_results_list <- run_gsea(x = bbc_obj,
-#     #                                 de_pkg = "edger",
-#     #                                 gene_set = "H",
-#     #                                 orgDb = dplyr::filter(annotation, common_name==config$common_name)$org.db,
-#     #                                 organism = dplyr::filter(annotation, common_name==config$common_name)$species)
-#     # 
-#     # if (length(H_gsea_results_list[[1]]@result$ID) > 0){
-#     #   enrichplot::dotplot(H_gsea_results_list[[1]],
-#     #                       showCategory=10,
-#     #                       title="Top gene sets",
-#     #                       split=".sign") +
-#     #     facet_grid(.~.sign)
-#     # } else{cat("No significant enrichment of Hallmark Gene Sets. \n\n")}
-#     # 
-#     # # KEGG
-#     # kegg_gsea_results_list <- run_gsea(x = bbc_obj,
-#     #                             de_pkg = "edger",
-#     #                             gene_set = "kegg",
-#     #                             orgDb = dplyr::filter(annotation, common_name==config$common_name)$org.db,
-#     #                             organism = dplyr::filter(annotation, common_name==config$common_name)$kegg,
-#     #                             minGSSize = 30,
-#     #                             use_internal_data = FALSE)
-#     # 
-#     #   if (length(kegg_gsea_results_list[[1]]@result$ID) > 0){
-#     #     enrichplot::dotplot(kegg_gsea_results_list[[1]],
-#     #                         showCategory=10,
-#     #                         title="Top gene sets",
-#     #                         split=".sign") +
-#     #       facet_grid(.~.sign)
-#     # } else{cat("No significant enrichment of KEGG Gene Sets. \n\n")}
-}
-```
-
-# Session Info
+## SessionInfo()
 
 ```{r sessionInfo}
 sessionInfo()

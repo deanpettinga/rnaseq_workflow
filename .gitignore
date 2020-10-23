@@ -4,33 +4,40 @@
 test.png
 *.smbdelete*
 
-logs/*
-!logs/runs/.keep
-!logs/.keep
-
-benchmarks/*
-!benchmarks/.keep
-
-raw_data/*
-!raw_data/.keep
-
 analysis/multiqc/*
 !analysis/multiqc/.keep
 analysis/star/*
 !analysis/star/.keep
 analysis/trimmed_data/*
 !analysis/trimmed_data/.keep
+analysis/ref-gene-compare/*
 
+benchmarks/*
+!benchmarks/.keep
+
+bin/de-sweep-synthesis_*
+bin/.de-sweep-synthesis*
+bin/diffExp_*
+bin/.diffExp*
+bin/library*
 
 deliverables/*
 !deliverables/.keep
 
-tmp/*
+logs/*
+!logs/runs/.keep
+!logs/.keep
+
+manuals/*
+
+raw_data/*
+!raw_data/.keep
+
+
+
+
 
 STARmanual*
 .Rproj.user
 .RData
 .Rhistory
-
-bin/diffExp_*
-bin/.diffExp.html*

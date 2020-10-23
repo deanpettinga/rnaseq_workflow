@@ -321,7 +321,7 @@ rule STAR_dedup:
         bam = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam",
         bai = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam.bai",
     log:
-        "logs/STAR_dedup/{sample}.log"
+        "logs/_dedup/{sample}.log"
     benchmark:
         "benchmarks/STAR_dedup/{sample}.txt"
     conda:
@@ -332,11 +332,11 @@ rule STAR_dedup:
         mem_gb =  64
     shell:
         """
-        samtools sort -@ {resources.threads} -n {input} |\
-        samtools view -h |\
-        samblaster --removeDups |\
-        samtools view -Sb - 1> {output.bam} 2> {log}
-        samtools index -b -@ {resources.threads} {output.bam}"
+        samtools sort -@ {resources.threads} -n {input} 2> {log} |\
+        samtools view -h  2>> {log}|\
+        samblaster --removeDups 2>> {log} |\
+        samtools view -Sb - 1> {output.bam} 2>> {log}
+        samtools index -b -@ {resources.threads} {output.bam} 2>> {log}
         """
 
 
