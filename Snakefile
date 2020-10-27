@@ -58,8 +58,8 @@ rule all:
         "references/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
         "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
         "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
-        "references/arikara/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
-        "references/arikara/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
+        "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
+        "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
 
         # star_index
         expand("references/{ref}/star/Genome", ref=["arikara","nebraska"]),
