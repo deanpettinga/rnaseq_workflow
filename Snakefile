@@ -259,11 +259,6 @@ rule download_silva:
     conda:       "envs/fastq_screen.yaml"
     shell:
         """
-        if [ -d analysis/fastq_screen/silva/ ]
-        mkdir analysis/fastq_screen/
-        mkdir analysis/fastq_screen/silva/
-        fi
-        # download
         wget -P {params.dir} https://www.arb-silva.de/fileadmin/silva_databases/release_138.1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
         wget -P {params.dir} https://www.arb-silva.de/fileadmin/silva_databases/release_138.1/Exports/SILVA_138.1_SSURef_NR99_tax_silva.fasta.gz
         gunzip {output.LSU}.gz
