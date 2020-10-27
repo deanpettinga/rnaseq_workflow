@@ -464,11 +464,11 @@ rule STAR_dedup:
         mem_gb =  64
     shell:
         """
-        samtools sort -@ {resources.threads} -n {input} 2> {log} |\
-        samtools view -h  2>> {log}|\
-        samblaster --removeDups 2>> {log} |\
-        samtools view -Sb - 1> {output.bam} 2>> {log}
-        samtools index -b -@ {resources.threads} {output.bam} 2>> {log}
+        samtools sort -@ {resources.threads} -n {input} | \
+        samtools view -h | \
+        samblaster --removeDups  2> {log} | \
+        samtools view -Sb - > {output.bam}
+        samtools index -b -@ {resources.threads} {output.bam}
         """
 
 multiqc_input = []
