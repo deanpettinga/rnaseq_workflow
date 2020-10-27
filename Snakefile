@@ -140,8 +140,8 @@ rule copy_references:
         HanXRQr2_gff3 =  "references/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
         nebraska_fasta = "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
         nebraska_gtf =   "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
-        arikara_fasta =  "references/arikara/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
-        arikara_gtf =    "references/arikara/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
+        arikara_fasta =  "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
+        arikara_gtf =    "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
     log:         "logs/copy_references.log"
     resources:
         threads = 1,
@@ -288,7 +288,6 @@ rule fastq_screen_silva_db:
         """
         bowtie2-build --threads {resources.threads} {input.LSU},{input.SSU} {params.prefix} 2> {log}
         """
-
 
 rule fastq_screen:
     input:
