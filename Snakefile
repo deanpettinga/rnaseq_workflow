@@ -192,7 +192,7 @@ rule star_index:
         """
         STAR \
         --runThread {resources.threads} \
-        --runMode {genomeGenerate} \
+        --runMode genomeGenerate \
         --genomeDir {params.genome_dir} \
         --genomeFastaFiles {input.fasta} \
         --sjdbGTFfile {input.gtf} \
