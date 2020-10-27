@@ -11,6 +11,7 @@ analysis/star/*
 analysis/trimmed_data/*
 !analysis/trimmed_data/.keep
 analysis/ref-gene-compare/*
+analysis/fastq_screen/*
 
 benchmarks/*
 !benchmarks/.keep
@@ -18,6 +19,7 @@ benchmarks/*
 bin/de-sweep-synthesis_*
 bin/.de-sweep-synthesis*
 bin/diffExp_*
+bin/diffExp.*
 bin/.diffExp*
 bin/library*
 
