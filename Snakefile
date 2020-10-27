@@ -126,9 +126,15 @@ rule all:
         # multiQC
         #"analysis/multiqc/multiqc_report.html",
 
-        # testing for optical duplicates
-        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
-        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
+        # star_dedup
+        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
+        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
+
+        # dedup_2_fastq
+        expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
+        expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
         #"bin/diffExp.html",
@@ -398,7 +404,7 @@ def STAR_outprefix(wildcards):
     prefix = "analysis/star/{sample}.".format(**wildcards)
     return prefix
 
-rule STAR:
+rule star:
     input:
         STAR_input
     output:
@@ -441,16 +447,14 @@ rule STAR:
         samtools index -b -@ {resources.threads} {output.bam}
         """
 
-rule STAR_dedup:
+rule star_dedup:
     input:
         "analysis/star/{sample}.Aligned.sortedByCoord.out.bam",
     output:
-        bam = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam",
-        bai = "analysis/star/{sample}.Aligned.sortedByCoord.out.dedup.bam.bai",
+        bam = "analysis/star_dedup/{sample}.Aligned.sortedByCoord.out.dedup.bam",
+        bai = "analysis/star_dedup/{sample}.Aligned.sortedByCoord.out.dedup.bam.bai",
     log:
-        "logs/STAR_dedup/{sample}.log"
-    benchmark:
-        "benchmarks/STAR_dedup/{sample}.txt"
+        "logs/star_dedup/{sample}.log"
     conda:
         "envs/samblaster.yaml"
     resources:
@@ -464,6 +468,27 @@ rule STAR_dedup:
         samblaster --removeDups  2> {log} | \
         samtools view -Sb - | samtools sort -@ {resources.threads} - > {output.bam}
         samtools index -b -@ {resources.threads} {output.bam}
+        """
+
+rule dedup_2_fastq:
+    input:         "analysis/star_dedup/{sample}.Aligned.sortedByCoord.out.dedup.bam",
+    output:
+        unpaired = "analysis/star_dedup/{sample}-unpaired.fastq.gz",
+        R1 =       "analysis/star_dedup/{sample}-R1.fastq.gz",
+        R2 =       "analysis/star_dedup/{sample}-R2.fastq.gz",
+    conda:
+        "envs/bamutil.yaml"
+    resources:
+        threads = 8,
+        nodes =   1,
+        mem_gb =  64,
+    shell:
+        """
+        bam2FastQ --in {input} --gzip \
+        --unpairedOut {output.unpaired} \
+        --firstOut {output.R1} \
+        --secondOut {output.R2} \
+        2> {log}
         """
 
 multiqc_input = []

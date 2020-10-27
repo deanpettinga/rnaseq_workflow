@@ -2,4 +2,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - fastq-screen=0.14.0
+  - bamutil=1.0.14
