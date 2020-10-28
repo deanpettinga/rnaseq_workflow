@@ -4,6 +4,7 @@
 test.png
 *.smbdelete*
 
+
 analysis/multiqc/*
 !analysis/multiqc/.keep
 analysis/star/*
@@ -12,6 +13,7 @@ analysis/trimmed_data/*
 !analysis/trimmed_data/.keep
 analysis/ref-gene-compare/*
 analysis/fastq_screen/*
+!analysis/fastq_screen/.keep
 
 benchmarks/*
 !benchmarks/.keep

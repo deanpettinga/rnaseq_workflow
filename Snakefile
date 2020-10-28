@@ -244,8 +244,6 @@ rule fastq_screen_get_genomes:
     conda:       "envs/fastq_screen.yaml"
     shell:
         """
-        mkdir analysis/fastq_screen
-        cd analysis/fastq_screen
         fastq_screen --get_genomes 2> {log}
         """
 
