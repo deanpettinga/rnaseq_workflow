@@ -234,7 +234,9 @@ rule fastq_screen_get_genomes:
                  expand("analysis/fastq_screen/FastQ_Screen_Genomes/Worm/Caenorhabditis_elegans.WBcel235.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
                  expand("analysis/fastq_screen/FastQ_Screen_Genomes/Yeast/Saccharomyces_cerevisiae.R64-1-1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
                  expand("analysis/fastq_screen/FastQ_Screen_Genomes/rRNA/GRCm38_rRNA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-                 "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
+    params:
+        outdir = "analysis/fastq_screen/",
+
     log:
                  "logs/fastq_screen_get_genomes.log"
     resources:
@@ -244,18 +246,35 @@ rule fastq_screen_get_genomes:
     conda:       "envs/fastq_screen.yaml"
     shell:
         """
-        fastq_screen --get_genomes 2> {log}
+        fastq_screen --get_genomes --outdir {params.outdir} 2> {log}
+        rm analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf
         """
 
-rule download_silva:
+rule download_SILVA:
+    # require fastq_screen_get_genomes to run first, creating the FastQ_Screen_Genomes/ where silva is stored
+    input:       expand("analysis/fastq_screen/FastQ_Screen_Genomes/Arabidopsis/Arabidopsis_thaliana.TAIR10.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Adapters/Contaminants.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Drosophila/BDGP6.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/E_coli/Ecoli.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Human/Homo_sapiens.GRCh38.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Lambda/Lambda.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Lambda/Vectors.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Mitochondria/mitochondria.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Mouse/Mus_musculus.GRCm38.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/PhiX/phi_plus_SNPs.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Rat/Rnor_6.0.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Vectors/Vectors.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Worm/Caenorhabditis_elegans.WBcel235.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/Yeast/Saccharomyces_cerevisiae.R64-1-1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+                 expand("analysis/fastq_screen/FastQ_Screen_Genomes/rRNA/GRCm38_rRNA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
     output:
-        LSU = "analysis/fastq_screen/silva/SILVA_138.1_LSURef_NR99_tax_silva.fasta",
-        SSU = "analysis/fastq_screen/silva/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
+        LSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_LSURef_NR99_tax_silva.fasta",
+        SSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
     params:
-        silva_release = "138.1",
-        dir = "analysis/fastq_screen/silva/",
+        SILVA_release = "138.1",
+        dir = "analysis/fastq_screenFastQ_Screen_Genomes/SILVA",
     log:
-            "logs/download_silva.log"
+            "logs/download_SILVA.log"
     resources:
         threads = 8,
         nodes =   1,
@@ -263,21 +282,20 @@ rule download_silva:
     conda:       "envs/fastq_screen.yaml"
     shell:
         """
-        wget -P {params.dir} https://www.arb-silva.de/fileadmin/silva_databases/release_138.1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
-        wget -P {params.dir} https://www.arb-silva.de/fileadmin/silva_databases/release_138.1/Exports/SILVA_138.1_SSURef_NR99_tax_silva.fasta.gz
+        wget -P {params.dir} https://www.arb-silva.de/fileadmin/silva_databases/release_{params.SILVA_release}/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
+        wget -P {params.dir} https://www.arb-silva.de/fileadmin/silva_databases/release_{params.SILVA_release}/Exports/SILVA_138.1_SSURef_NR99_tax_silva.fasta.gz
         gunzip {output.LSU}.gz
         gunzip {output.SSU}.gz
         """
 
-rule fastq_screen_silva_db:
+rule fastq_screen_SILVA_db:
     input:
-        LSU = "analysis/fastq_screen/silva/SILVA_138.1_LSURef_NR99_tax_silva.fasta",
-        SSU = "analysis/fastq_screen/silva/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
+        LSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_LSURef_NR99_tax_silva.fasta",
+        SSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
     params:
-        silva_release = "138.1",
-        prefix = "analysis/fastq_screen/silva/silva",
-    output:   expand("analysis/fastq_screen/silva/silva.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-    log:      "logs/fastq_screen_silva_db.log",
+        prefix = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/",
+    output:   expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+    log:      "logs/fastq_screen_SILVA_db.log",
     resources:
         threads = 8,
         nodes =   1,
