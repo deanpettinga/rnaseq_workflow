@@ -6,17 +6,17 @@ contrasts: bin/contrasts.tsv
 ref:
   # path/to/reference/gDNA.fasta
   sequence:
-    arikara:      /global/home/users/pettinga/scratch/refs/arikara/sequence/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa
-    nebraska:     /global/home/users/pettinga/scratch/refs/nebraska/sequence/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa
+    arikara:      references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa
+    nebraska:     references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa
   fai:            # .fai here
   # path/to/STAR/index/directory
   index:
-    arikara:      /global/home/users/pettinga/scratch/refs/arikara/indexes/star
-    nebraska:     /global/home/users/pettinga/scratch/refs/nebraska/indexes/star
+    arikara:      references/star_indexes/arikara
+    nebraska:     references/star_indexes/nebraska
   # path/to/gtf/file/with/transcripts.gtf
   annotation:
-    arikara:      /global/home/users/pettinga/scratch/refs/arikara/annotation/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf
-    nebraska:     /global/home/users/pettinga/scratch/refs/nebraska/annotation/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf
+    arikara:      references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf
+    nebraska:     references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf
   # known variants (Broad resource downloaded here: https://console.cloud.google.com/storage/browser/genomics-public-data/resources/broad/hg38/v0/)
   # e.g. known_snps:     /secondary/projects/bbc/research/broad_resource_bundle_hg38/Homo_sapiens_assembly38.dbsnp138.vcf
   # e.g. known_indels:   /secondary/projects/bbc/research/broad_resource_bundle_hg38/Homo_sapiens_assembly38.known_indels.vcf.gz
