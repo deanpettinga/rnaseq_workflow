@@ -54,12 +54,12 @@ rule all:
         "analysis/09b_snp_pca_and_dendro/report.html" if (config["call_variants"] and conda_avail) else [],
 
         # copy_references
-        "references/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.fasta",
-        "references/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
-        "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
-        "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
-        "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
-        "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
+        "references/HanXRQr2.0-SUNRISE-2.1.genome.fasta",
+        "references/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
+        "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
+        "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
+        "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
+        "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
 
         # star_index
         expand("references/{ref}/star/Genome", ref=["arikara","nebraska"]),
@@ -142,12 +142,12 @@ rule all:
 rule copy_references:
     input:
     output:
-        HanXRQr2_fasta = "references/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.fasta",
-        HanXRQr2_gff3 =  "references/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
-        nebraska_fasta = "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
-        nebraska_gtf =   "references/nebraska/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
-        arikara_fasta =  "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
-        arikara_gtf =    "references/arikara/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
+        HanXRQr2_fasta = "references/HanXRQr2.0-SUNRISE-2.1.genome.fasta",
+        HanXRQr2_gff3 =  "references/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
+        nebraska_fasta = "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
+        nebraska_gtf =   "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
+        arikara_fasta =  "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
+        arikara_gtf =    "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
     log:         "logs/copy_references.log"
     resources:
         threads = 1,
@@ -157,7 +157,7 @@ rule copy_references:
         """
         # HanXRQr2
         cp /clusterfs/vector/instrumentData/blackmanlab/Helianthus/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.fasta {output.HanXRQr2_fasta}
-        cp /clusterfs/vector/instrumentData/blackmanlab/Helianthus/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.genome.gff3 {output.HanXRQr2_gff3}
+        cp /clusterfs/vector/instrumentData/blackmanlab/Helianthus/HanXRQr2/HanXRQr2.0-SUNRISE-2.1.gff3 {output.HanXRQr2_gff3}
         # nebraska
         cp /clusterfs/vector/instrumentData/blackmanlab/Helianthus/nina/Reference_Indexes/NB_Consensus.fa {output.nebraska_fasta}
         cp /clusterfs/vector/instrumentData/blackmanlab/Helianthus/nina/Reference_Indexes/NB_CrossMap_LiftedOver.gtf {output.nebraska_gtf}
