@@ -98,10 +98,10 @@ rule all:
         "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
 
         # download_silva
-        expand("analysis/fastq_screen/silva/SILVA_138.1_{subunit}Ref_NR99_tax_silva.fasta", subunit=["SSU","LSU"]),
+        expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_{subunit}Ref_NR99_tax_silva.fasta", subunit=["SSU","LSU"]),
 
         # fastq_screen_silva_db
-        expand("analysis/fastq_screen/silva/silva.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
 
         # fastq_screen
         # expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
@@ -166,7 +166,7 @@ rule copy_references:
         cp /clusterfs/vector/instrumentData/blackmanlab/Helianthus/nina/Reference_Indexes/Arikara_CrossMap_LiftedOver.gtf {output.arikara_gtf}
         """
 
-rule star_index:
+rule STAR_index:
     input:
         fasta = "references/{ref}/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.fa",
         gtf =   "references/{ref}/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.gtf",
@@ -308,9 +308,9 @@ rule fastq_screen_SILVA_db:
 
 rule fastq_screen:
     input:
-        sunflower =   expand("analysis/fastq_screen/silva.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        sunflower =   expand("analysis/fastq_screen/FastQ_Screen_Genomes/silva.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         # my indices
-        silva =       expand("analysis/fastq_screen/silva/silva.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        silva =       expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         # default indices
         arabidopsis = expand("analysis/fastq_screen/FastQ_Screen_Genomes/Arabidopsis/Arabidopsis_thaliana.TAIR10.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         adapters =    expand("analysis/fastq_screen/FastQ_Screen_Genomes/Adapters/Contaminants.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
