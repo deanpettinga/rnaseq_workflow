@@ -168,8 +168,8 @@ rule copy_references:
 
 rule STAR_index:
     input:
-        fasta = "references/{ref}/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.fa",
-        gtf =   "references/{ref}/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.gtf",
+        fasta = "references/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.fa",
+        gtf =   "references/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.gtf",
     params:
         genome_dir = "references/{ref}/star/",
     output:
