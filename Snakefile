@@ -293,9 +293,26 @@ rule fastq_screen_SILVA_db:
         LSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_LSURef_NR99_tax_silva.fasta",
         SSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
     params:
-        prefix = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/",
+        prefix = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA",
     output:   expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
     log:      "logs/fastq_screen_SILVA_db.log",
+    resources:
+        threads = 8,
+        nodes =   1,
+        mem_gb =  64,
+    conda:       "envs/fastq_screen.yaml"
+    shell:
+        """
+        bowtie2-build --threads {resources.threads} {input.LSU},{input.SSU} {params.prefix} 2> {log}
+        """
+
+rule fastq_screen_sunflower_db:
+    input:
+        fasta = "references/HanXRQr2.0-SUNRISE-2.1.genome.fasta"
+    params:
+        prefix = "analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1",
+    output:   expand("analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+    log:      "logs/fastq_screen_sunflower_db.log",
     resources:
         threads = 8,
         nodes =   1,
