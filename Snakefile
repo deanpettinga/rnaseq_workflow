@@ -97,10 +97,10 @@ rule all:
         expand("analysis/fastq_screen/FastQ_Screen_Genomes/rRNA/GRCm38_rRNA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
 
-        # download_silva
+        # download_SILVA
         expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_{subunit}Ref_NR99_tax_silva.fasta", subunit=["SSU","LSU"]),
 
-        # fastq_screen_silva_db
+        # fastq_screen_SILVA_db
         expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
 
         # fastq_screen
