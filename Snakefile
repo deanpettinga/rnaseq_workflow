@@ -272,7 +272,7 @@ rule download_SILVA:
         SSU = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
     params:
         SILVA_release = "138.1",
-        dir = "analysis/fastq_screenFastQ_Screen_Genomes/SILVA",
+        dir = "analysis/fastq_screen/FastQ_Screen_Genomes/SILVA",
     log:
             "logs/download_SILVA.log"
     resources:
