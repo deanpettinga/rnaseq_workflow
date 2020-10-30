@@ -148,7 +148,6 @@ rule copy_references:
         nebraska_gtf =   "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
         arikara_fasta =  "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
         arikara_gtf =    "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
-    log:         "logs/copy_references.log"
     resources:
         threads = 1,
         nodes =   1,
@@ -193,16 +192,19 @@ rule STAR_index:
         threads = 8,
         nodes =   1,
         mem_gb =  64,
+    log:
+                 "logs/STAR_index/{ref}.log"
     conda:       "envs/star.yaml"
     shell:
         """
         STAR \
-        --runThread {resources.threads} \
+        --runThreadN {resources.threads} \
         --runMode genomeGenerate \
         --genomeDir {params.genome_dir} \
         --genomeFastaFiles {input.fasta} \
         --sjdbGTFfile {input.gtf} \
-        --sjdbOverhang 99
+        --sjdbOverhang 99 \
+        2> {log}
         """
 rule mergeLanesAndRename_PE:
     input:
