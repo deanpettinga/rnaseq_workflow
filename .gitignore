@@ -24,6 +24,7 @@ bin/diffExp_*
 bin/diffExp.*
 bin/.diffExp*
 bin/library*
+bin/*go_propagation*
 
 deliverables/*
 !deliverables/.keep
