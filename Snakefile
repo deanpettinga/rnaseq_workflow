@@ -127,13 +127,13 @@ rule all:
         #"analysis/multiqc/multiqc_report.html",
 
         # star_dedup
-        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
-        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
-
-        # dedup_2_fastq
-        expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
-        expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
-        expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
+        #
+        # # dedup_2_fastq
+        # expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
 
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
@@ -509,6 +509,8 @@ rule dedup_2_fastq:
         unpaired = "analysis/star_dedup/{sample}-unpaired.fastq.gz",
         R1 =       "analysis/star_dedup/{sample}-R1.fastq.gz",
         R2 =       "analysis/star_dedup/{sample}-R2.fastq.gz",
+    log:
+        "logs/dedup_2_fastq/{sample}.log"
     conda:
         "envs/bamutil.yaml"
     resources:
@@ -517,7 +519,7 @@ rule dedup_2_fastq:
         mem_gb =  64,
     shell:
         """
-        bam2FastQ --in {input} --gzip \
+        bam bam2FastQ --in {input} --gzip \
         --unpairedOut {output.unpaired} \
         --firstOut {output.R1} \
         --secondOut {output.R2} \
