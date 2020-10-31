@@ -204,7 +204,7 @@ rule STAR_index:
         --genomeFastaFiles {input.fasta} \
         --sjdbGTFfile {input.gtf} \
         --sjdbOverhang 99 \
-        2> {log}
+        --outFileNamePrefix {params.genome_dir}
         """
 rule mergeLanesAndRename_PE:
     input:
