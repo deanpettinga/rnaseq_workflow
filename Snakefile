@@ -170,7 +170,7 @@ rule STAR_index:
         fasta = "references/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.fa",
         gtf =   "references/HanXRQr2.0-SUNRISE-2.1_{ref}_consensus.gtf",
     params:
-        genome_dir = "references/star_indexes/{ref}",
+        genome_dir = "references/star_indexes/{ref}/",
     output:
         "references/star_indexes/{ref}/Genome",
         "references/star_indexes/{ref}/Log.out",
