@@ -299,6 +299,7 @@ rowData(bbc_obj) <- data.frame(gene=rownames(bbc_obj)) %>% dplyr::mutate(gene=st
 
 # Differential Expression
 
+
 ## QC
 
 ```{r}
@@ -431,7 +432,7 @@ plot.volcano(DE_results.endosperm)
 plot.MD(DE_results.endosperm)
 ```
 
-## earlyBudding
+## Early Budding
 
 ```{r}
 # get DE table
@@ -448,7 +449,7 @@ plot.volcano(DE_results.earlyBudding)
 plot.MD(DE_results.earlyBudding)
 ```
 
-## lateBudding
+## Late Budding
 
 ```{r}
 # get DE table
@@ -471,6 +472,105 @@ write_tsv(as.data.frame(assay(bbc_obj@edger@norm_cts)) %>% rownames_to_column(va
 save.image(file = "diffExp.RData")
 ```
 
+# testing GO analysis
+```{r}
+
+# setup Gene Ontology dataset from 
+HanXRQr2.GO = read_tsv("HanXRQr2.0-SUNRISE-2.1.Blast2GO-20181213.go_propagation.txt") %>%
+  dplyr::rename(gene=`Seq Name`, go_id=GO) %>% dplyr::select(gene,go_id) %>% as.data.frame()
+
+# initiate results tibble
+go_result.all = NULL
+
+# run go_enrich on each DE_result
+for(i in 1:length(list(DE_results.earlyBudding, 
+                        DE_results.endosperm, 
+                        DE_results.lateBudding,
+                        DE_results.leaf,
+                        DE_results.meristem,
+                        DE_results.node,
+                        DE_results.root,
+                        DE_results.seedcoat,
+                        DE_results.shoot))){
+  
+  # prepare input for go_enrich from DE_results
+  input_hyper <- DE_results.list[[i]] %>%
+    # classify significant results as "candidates" if FDR < 0.05
+    dplyr::mutate(is_candidate = dplyr::case_when(
+      (FDR < 0.05) ~ 1,
+      (FDR >= 0.05)~ 0)) %>%
+    dplyr::select(gene, is_candidate) %>% as.data.frame()
+  
+  # run GO enrichment hypergeometic test
+  go_result.i <- go_enrich(input_hyper, 
+                     test="hyper",
+                     annotation = HanXRQr2.GO)
+  go_result.i
+  # add GO result for comparison "i" to the 
+  go_result.all <- bind_rows(go_result.all, go_result.i)
+}
+
+ggplot(go.test$results, aes(x=FWER_overrep)) +
+  geom_histogram() + 
+  facet_grid(cols=vars(ontology))
+
+go.test.1 <- go.test$results %>% dplyr::mutate(tissue="endosperm")
+go.test.2 <- go.test$results %>% dplyr::mutate(tissue="meristem")
+
+ggplot(rbind(go.test.1,go.test.2), aes(x=raw_p_overrep)) +
+  geom_histogram()ggthemes::scale_color_wsj(palette = "rgby")
+```
+
+```{r}
+# DE_results.earlyBudding[[2]] %>%
+#   # sort a la GSEA: sign(FC)*-log10pvalue 
+#   # low rank= highly significant downregulated
+#   # high rank = highly significant upregulated
+#   # middle = insignificant
+#   dplyr::mutate(rank = sign(logFC)*-log10(PValue))
+
+# setup Gene Ontology dataset from 
+HanXRQr2.GO = read_tsv("HanXRQr2.0-SUNRISE-2.1.Blast2GO-20181213.go_propagation.txt") %>%
+  dplyr::rename(gene=`Seq Name`, go_id=GO) %>% dplyr::select(gene,go_id) %>% as.data.frame()
+
+# DE_results.earlyBudding, 
+# DE_results.endosperm, 
+# DE_results.lateBudding,
+# DE_results.leaf,
+# DE_results.meristem,
+# DE_results.node,
+# DE_results.root,
+# DE_results.seedcoat,
+# DE_results.shoot
+  
+run_goFuncR <- function(DE_results.tissue, tissue_string){
+  go_result = go_enrich(genes = DE_results.tissue[[2]] %>%
+                                       dplyr::mutate(score=-PValue) %>% 
+                                       dplyr::select(gene,score) %>%
+                                       as.data.frame(),
+                                       annotation = HanXRQr2.GO,
+                                       test="wilcoxon",
+                                       n_randsets = 1000) %>%
+    .$results %>% dplyr::mutate(tissue=tissue_string)
+  
+  return(go_result %>% dplyr::select(tissue,everything()))
+}
+
+GO_results <- rbind(run_goFuncR(DE_results.leaf,"leaf"),
+                    run_goFuncR(DE_results.meristem,"meristem"),
+                    run_goFuncR(DE_results.node,"node"),
+                    run_goFuncR(DE_results.root,"root"),
+                    run_goFuncR(DE_results.shoot,"shoot"),
+                    run_goFuncR(DE_results.seedcoat,"seedcoat"),
+                    run_goFuncR(DE_results.endosperm,"endosperm"),
+                    run_goFuncR(DE_results.earlyBudding,"earlyBudding"),
+                    run_goFuncR(DE_results.lateBudding,"lateBudding")
+)
+                    
+
+# go_results %>%
+#   ggplot(aes(x=raw_p_high_rank, y=raw_p_low_rank, color=ontology))
+```
 
 ## SessionInfo()
 
