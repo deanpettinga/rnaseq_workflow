@@ -126,14 +126,14 @@ rule all:
         # multiQC
         #"analysis/multiqc/multiqc_report.html",
 
-        # # star_dedup
-        # expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
-        # expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
-        #
-        # # dedup_2_fastq
-        # expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
-        # expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
-        # expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+        # star_dedup
+        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
+        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
+
+        # dedup_2_fastq
+        expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
+        expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
 
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
