@@ -453,7 +453,7 @@ rule star:
         g_dir =     directory("analysis/star/{sample}._STARgenome"),
         pass1_dir = directory("analysis/star/{sample}._STARpass1"),
     params:
-        index = lambda wildcards: config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["accession"]],
+        index = lambda wildcards: config["ref"]["index"][units.loc["{sample}".format(**wildcards)]["status"]],
         outprefix = "analysis/star/{sample}."
 	# STAR_outprefix
     log:
