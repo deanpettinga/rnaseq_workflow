@@ -313,7 +313,7 @@ rule fastq_screen_sunflower_db:
         fasta = "references/HanXRQr2.0-SUNRISE-2.1.genome.fasta"
     params:
         prefix = "analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1",
-    output:   expand("analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+    output:      expand("analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
     log:      "logs/fastq_screen_sunflower_db.log",
     resources:
         threads = 8,
@@ -327,7 +327,7 @@ rule fastq_screen_sunflower_db:
 
 rule fastq_screen:
     input:
-        sunflower =   expand("analysis/fastq_screen/FastQ_Screen_Genomes/silva.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        sunflower =   expand("analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         # my indices
         silva =       expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         # default indices
