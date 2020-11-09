@@ -104,10 +104,10 @@ rule all:
         expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
 
         # fastq_screen
-        # expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
-        # expand("analysis/fastq_screen/{units.sample}-R1_screen.txt", units=units.itertuples()),
-        # expand("analysis/fastq_screen/{units.sample}-R2_screen.html", units=units.itertuples()),
-        # expand("analysis/fastq_screen/{units.sample}-R2_screen.txt", units=units.itertuples()),
+        expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
+        expand("analysis/fastq_screen/{units.sample}-R1_screen.txt", units=units.itertuples()),
+        expand("analysis/fastq_screen/{units.sample}-R2_screen.html", units=units.itertuples()),
+        expand("analysis/fastq_screen/{units.sample}-R2_screen.txt", units=units.itertuples()),
 
         # mergeLanesAndRename
         # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
@@ -120,8 +120,8 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
 
         # STAR alignment
-        # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
-        # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
 
         # multiQC
         #"analysis/multiqc/multiqc_report.html",
