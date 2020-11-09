@@ -322,7 +322,7 @@ rule fastq_screen_sunflower_db:
     conda:       "envs/fastq_screen.yaml"
     shell:
         """
-        bowtie2-build --threads {resources.threads} {input.LSU},{input.SSU} {params.prefix} 2> {log}
+        bowtie2-build --threads {resources.threads} {input.fasta} {params.prefix} 2> {log}
         """
 
 rule fastq_screen:
