@@ -360,7 +360,7 @@ rule fastq_screen:
         threads = 8,
         nodes =   1,
         mem_gb =  64,
-    envmodules:   "bbc/fastq_screen/fastq_screen-0.14.0"
+    conda:   "envs/fastq_screen.yaml"
     shell:
         """
         fastq_screen --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
