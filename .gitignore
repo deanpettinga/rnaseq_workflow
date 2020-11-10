@@ -14,6 +14,7 @@ analysis/trimmed_data/*
 analysis/ref-gene-compare/*
 analysis/fastq_screen/*
 !analysis/fastq_screen/.keep
+!analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf
 
 benchmarks/*
 !benchmarks/.keep
