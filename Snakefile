@@ -53,61 +53,61 @@ rule all:
         lambda wildcards: "analysis/09a_variant_annot/all.merged.filt.PASS.snpeff.vcf.gz.tbi" if config["call_variants"] else [],
         "analysis/09b_snp_pca_and_dendro/report.html" if (config["call_variants"] and conda_avail) else [],
 
-        # copy_references
-        "references/HanXRQr2.0-SUNRISE-2.1.genome.fasta",
-        "references/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
-        "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
-        "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
-        "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
-        "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
+        # # copy_references
+        # "references/HanXRQr2.0-SUNRISE-2.1.genome.fasta",
+        # "references/HanXRQr2.0-SUNRISE-2.1.genome.gff3",
+        # "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.fa",
+        # "references/HanXRQr2.0-SUNRISE-2.1_nebraska_consensus.gtf",
+        # "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.fa",
+        # "references/HanXRQr2.0-SUNRISE-2.1_arikara_consensus.gtf",
 
-        # star_index
-        expand("references/star_indexes/{ref}/Genome", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/Log.out", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/SA", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/SAindex", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/chrLength.txt", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/chrName.txt", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/chrNameLength.txt", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/chrStart.txt", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/exonGeTrInfo.tab", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/exonInfo.tab", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/geneInfo.tab", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/genomeParameters.txt", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/sjdbInfo.txt", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/sjdbList.fromGTF.out.tab", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/sjdbList.out.tab", ref=["arikara","nebraska"]),
-        expand("references/star_indexes/{ref}/transcriptInfo.tab", ref=["arikara","nebraska"]),
+        # # star_index
+        # expand("references/star_indexes/{ref}/Genome", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/Log.out", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/SA", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/SAindex", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/chrLength.txt", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/chrName.txt", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/chrNameLength.txt", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/chrStart.txt", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/exonGeTrInfo.tab", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/exonInfo.tab", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/geneInfo.tab", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/genomeParameters.txt", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/sjdbInfo.txt", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/sjdbList.fromGTF.out.tab", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/sjdbList.out.tab", ref=["arikara","nebraska"]),
+        # expand("references/star_indexes/{ref}/transcriptInfo.tab", ref=["arikara","nebraska"]),
 
-        # fastq_screen_get_genomes
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Arabidopsis/Arabidopsis_thaliana.TAIR10.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Adapters/Contaminants.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Drosophila/BDGP6.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/E_coli/Ecoli.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Human/Homo_sapiens.GRCh38.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Lambda/Lambda.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Lambda/Vectors.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Mitochondria/mitochondria.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Mouse/Mus_musculus.GRCm38.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/PhiX/phi_plus_SNPs.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Rat/Rnor_6.0.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Vectors/Vectors.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Worm/Caenorhabditis_elegans.WBcel235.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Yeast/Saccharomyces_cerevisiae.R64-1-1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/rRNA/GRCm38_rRNA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
+        # # fastq_screen_get_genomes
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Arabidopsis/Arabidopsis_thaliana.TAIR10.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Adapters/Contaminants.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Drosophila/BDGP6.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/E_coli/Ecoli.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Human/Homo_sapiens.GRCh38.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Lambda/Lambda.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Lambda/Vectors.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Mitochondria/mitochondria.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Mouse/Mus_musculus.GRCm38.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/PhiX/phi_plus_SNPs.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Rat/Rnor_6.0.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Vectors/Vectors.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Worm/Caenorhabditis_elegans.WBcel235.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/Yeast/Saccharomyces_cerevisiae.R64-1-1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/rRNA/GRCm38_rRNA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
 
-        # download_SILVA
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_{subunit}Ref_NR99_tax_silva.fasta", subunit=["SSU","LSU"]),
+        # # download_SILVA
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA_138.1_{subunit}Ref_NR99_tax_silva.fasta", subunit=["SSU","LSU"]),
 
-        # fastq_screen_SILVA_db
-        expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
+        # # fastq_screen_SILVA_db
+        # expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
 
-        # fastq_screen
-        expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
-        expand("analysis/fastq_screen/{units.sample}-R1_screen.txt", units=units.itertuples()),
-        expand("analysis/fastq_screen/{units.sample}-R2_screen.html", units=units.itertuples()),
-        expand("analysis/fastq_screen/{units.sample}-R2_screen.txt", units=units.itertuples()),
+        # # fastq_screen
+        # expand("analysis/fastq_screen/{units.sample}-R1_screen.html", units=units.itertuples()),
+        # expand("analysis/fastq_screen/{units.sample}-R1_screen.txt", units=units.itertuples()),
+        # expand("analysis/fastq_screen/{units.sample}-R2_screen.html", units=units.itertuples()),
+        # expand("analysis/fastq_screen/{units.sample}-R2_screen.txt", units=units.itertuples()),
 
         # mergeLanesAndRename
         # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
@@ -126,14 +126,14 @@ rule all:
         # multiQC
         #"analysis/multiqc/multiqc_report.html",
 
-        # star_dedup
-        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
-        expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
-
-        # dedup_2_fastq
-        expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
-        expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
-        expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
+        # # star_dedup
+        # expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}.Aligned.sortedByCoord.out.dedup.bam.bai", units=units.itertuples()),
+        #
+        # # dedup_2_fastq
+        # expand("analysis/star_dedup/{units.sample}-unpaired.fastq.gz", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}-R1.fastq.gz", units=units.itertuples()),
+        # expand("analysis/star_dedup/{units.sample}-R2.fastq.gz", units=units.itertuples()),
 
         #expand("analysis/02_splitncigar/{units.sample}.Aligned.sortedByCoord.out.addRG.mrkdup.splitncigar.bam", units=var_calling_units.itertuples())
         # edgeR
@@ -363,8 +363,15 @@ rule fastq_screen:
     conda:   "envs/fastq_screen.yaml"
     shell:
         """
-        fastq_screen --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
-        fastq_screen --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R2} 2> {log.R2}
+        fastq_screen \
+        --conf bin/fastq_screen.conf \
+        --outdir analysis/fastq_screen/ \
+        {input.R1} 2> {log.R1}
+
+        fastq_screen \
+        --conf bin/fastq_screen.conf \
+        --outdir analysis/fastq_screen/ \
+        {input.R2} 2> {log.R2}
         """
 
 def trim_galore_input(wildcards):
