@@ -328,9 +328,7 @@ rule fastq_screen_sunflower_db:
 rule fastq_screen:
     input:
         sunflower =   expand("analysis/fastq_screen/FastQ_Screen_Genomes/Sunflower/HanXRQr2.0-SUNRISE-2.1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        # my indices
         silva =       expand("analysis/fastq_screen/FastQ_Screen_Genomes/SILVA/SILVA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        # default indices
         arabidopsis = expand("analysis/fastq_screen/FastQ_Screen_Genomes/Arabidopsis/Arabidopsis_thaliana.TAIR10.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         adapters =    expand("analysis/fastq_screen/FastQ_Screen_Genomes/Adapters/Contaminants.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         fly =         expand("analysis/fastq_screen/FastQ_Screen_Genomes/Drosophila/BDGP6.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
@@ -365,7 +363,7 @@ rule fastq_screen:
     envmodules:   "bbc/fastq_screen/fastq_screen-0.14.0"
     shell:
         """
-        fastq_screen --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
+        fastq_screen  --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
         fastq_screen --outdir analysis/fastq_screen/ {input.R2} 2> {log.R2}
         """
 
