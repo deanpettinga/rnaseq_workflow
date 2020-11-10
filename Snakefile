@@ -363,8 +363,8 @@ rule fastq_screen:
     envmodules:   "bbc/fastq_screen/fastq_screen-0.14.0"
     shell:
         """
-        fastq_screen  --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
-        fastq_screen --outdir analysis/fastq_screen/ {input.R2} 2> {log.R2}
+        fastq_screen --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R1} 2> {log.R1}
+        fastq_screen --conf bin/fastq_screen.conf --outdir analysis/fastq_screen/ {input.R2} 2> {log.R2}
         """
 
 def trim_galore_input(wildcards):
