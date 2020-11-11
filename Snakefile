@@ -109,6 +109,9 @@ rule all:
         # expand("analysis/fastq_screen/{units.sample}-R2_screen.html", units=units.itertuples()),
         # expand("analysis/fastq_screen/{units.sample}-R2_screen.txt", units=units.itertuples()),
 
+        "analysis/fastq_screen/nebraska_shoot_3-R2_screen.html",
+        "analysis/fastq_screen/nebraska_shoot_3-R2_screen.txt"
+
         # mergeLanesAndRename
         # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
         # expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),\
@@ -119,9 +122,10 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-R{read}_val_{read}_fastqc.zip", read=[1,2], units=units.itertuples()),
         # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
 
-        # STAR alignment
-        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
-        expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
+        # # STAR alignment
+        # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
+        # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
+
 
         # multiQC
         #"analysis/multiqc/multiqc_report.html",
@@ -344,7 +348,7 @@ rule fastq_screen:
         worm =        expand("analysis/fastq_screen/FastQ_Screen_Genomes/Worm/Caenorhabditis_elegans.WBcel235.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         yeast =       expand("analysis/fastq_screen/FastQ_Screen_Genomes/Yeast/Saccharomyces_cerevisiae.R64-1-1.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
         rRNA =        expand("analysis/fastq_screen/FastQ_Screen_Genomes/rRNA/GRCm38_rRNA.{suffix}", suffix=["1.bt2","2.bt2","3.bt2","4.bt2","rev.1.bt2","rev.2.bt2"]),
-        conf =               "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
+        #conf =               "analysis/fastq_screen/FastQ_Screen_Genomes/fastq_screen.conf",
         # reads
         R1 =      "raw_data/{sample}-R1.fastq.gz",
         R2 =      "raw_data/{sample}-R2.fastq.gz",
