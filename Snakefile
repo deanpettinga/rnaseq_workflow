@@ -109,9 +109,6 @@ rule all:
         # expand("analysis/fastq_screen/{units.sample}-R2_screen.html", units=units.itertuples()),
         # expand("analysis/fastq_screen/{units.sample}-R2_screen.txt", units=units.itertuples()),
 
-        "analysis/fastq_screen/nebraska_shoot_3-R2_screen.html",
-        "analysis/fastq_screen/nebraska_shoot_3-R2_screen.txt"
-
         # mergeLanesAndRename
         # expand("raw_data/{units.sample}-R1.fastq.gz", units=units.itertuples()),
         # expand("raw_data/{units.sample}-R2.fastq.gz", units=units.itertuples()),\
@@ -123,8 +120,8 @@ rule all:
         # expand("analysis/trimmed_data/{units.sample}-R{read}.fastq.gz_trimming_report.txt", read=[1,2], units=units.itertuples()),
 
         # # STAR alignment
-        # expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
-        # expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Aligned.sortedByCoord.out.bam", units=units.itertuples()),
+        expand("analysis/star/{units.sample}.Log.out", units=units.itertuples()),
 
 
         # multiQC
