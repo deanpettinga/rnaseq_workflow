@@ -1,86 +1,92 @@
-sample	group	tissue	accession	status	replicate	pooled	growthStage	dayLength	fq1	fq2
-arikara_leaf_1	arikara_leaf	leaf	arikara	domesticated	1	no	20_DAP	longDay	Ari-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090774_1.fq.gz	Ari-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090774_2.fq.gz
-arikara_leaf_2	arikara_leaf	leaf	arikara	domesticated	2	no	20_DAP	longDay	Ari-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090775_1.fq.gz	Ari-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090775_2.fq.gz
-arikara_leaf_3	arikara_leaf	leaf	arikara	domesticated	3	no	20_DAP	longDay	Ari-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090776_1.fq.gz	Ari-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090776_2.fq.gz
-arikara_meristem_1	arikara_meristem	meristem	arikara	domesticated	1	no	20_DAP	longDay	Ari-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090786_1.fq.gz	Ari-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090786_2.fq.gz
-arikara_meristem_2	arikara_meristem	meristem	arikara	domesticated	2	no	20_DAP	longDay	Ari-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090787_1.fq.gz	Ari-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090787_2.fq.gz
-arikara_meristem_3	arikara_meristem	meristem	arikara	domesticated	3	no	20_DAP	longDay	Ari-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090788_1.fq.gz	Ari-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090788_2.fq.gz
-arikara_node_1	arikara_node	node	arikara	domesticated	1	no	20_DAP	longDay	Ari-LD-node-1_FCC5FUJACXX_L1_CHKPEI14090780_1.fq.gz	Ari-LD-node-1_FCC5FUJACXX_L1_CHKPEI14090780_2.fq.gz
-arikara_node_2	arikara_node	node	arikara	domesticated	2	no	20_DAP	longDay	Ari-LD-node-2_FCC5FUJACXX_L1_CHKPEI14090781_1.fq.gz	Ari-LD-node-2_FCC5FUJACXX_L1_CHKPEI14090781_2.fq.gz
-arikara_node_3	arikara_node	node	arikara	domesticated	3	no	20_DAP	longDay	Ari-LD-node-3_FCC5FUJACXX_L1_CHKPEI14090782_1.fq.gz	Ari-LD-node-3_FCC5FUJACXX_L1_CHKPEI14090782_2.fq.gz
-arikara_root_1	arikara_root	root	arikara	domesticated	1	5x	7_DAP	NA	Ari-Root-1_FCC5FUJACXX_L3_CHKPEI14090792_1.fq.gz	Ari-Root-1_FCC5FUJACXX_L3_CHKPEI14090792_2.fq.gz
-arikara_root_2	arikara_root	root	arikara	domesticated	2	5x	7_DAP	NA	Ari-Root-2_FCC5FUJACXX_L3_CHKPEI14090793_1.fq.gz	Ari-Root-2_FCC5FUJACXX_L3_CHKPEI14090793_2.fq.gz
-arikara_root_3	arikara_root	root	arikara	domesticated	3	5x	7_DAP	NA	Ari-Root-3_FCC5FUJACXX_L3_CHKPEI14090794_1.fq.gz	Ari-Root-3_FCC5FUJACXX_L3_CHKPEI14090794_2.fq.gz
-arikara_shoot_1	arikara_shoot	shoot	arikara	domesticated	1	5x	7_DAP	NA	ari-shoot-1-redo_FCC5FUJACXX_L3_CHKPEI14090795_1.fq.gz	ari-shoot-1-redo_FCC5FUJACXX_L3_CHKPEI14090795_2.fq.gz
-arikara_shoot_2	arikara_shoot	shoot	arikara	domesticated	2	5x	7_DAP	NA	Ari-Shoot-2_FCC5FUJACXX_L3_CHKPEI14090796_1.fq.gz	Ari-Shoot-2_FCC5FUJACXX_L3_CHKPEI14090796_2.fq.gz
-arikara_shoot_3	arikara_shoot	shoot	arikara	domesticated	3	5x	7_DAP	NA	Ari-Shoot-3_FCC5FUJACXX_L3_CHKPEI14090797_1.fq.gz	Ari-Shoot-3_FCC5FUJACXX_L3_CHKPEI14090797_2.fq.gz
-arikara_seedcoat_1	arikara_seedcoat	seedcoat	arikara	domesticated	1	3or4x	9_DPF	longDay	Ari-LD-seedcoat-1_1.fq.gz	Ari-LD-seedcoat-1_2.fq.gz
-arikara_seedcoat_2	arikara_seedcoat	seedcoat	arikara	domesticated	2	3or4x	9_DPF	longDay	Ari-LD-seedcoat-2_1.fq.gz	Ari-LD-seedcoat-2_2.fq.gz
-arikara_seedcoat_3	arikara_seedcoat	seedcoat	arikara	domesticated	3	3or4x	9_DPF	longDay	Ari-LD-seedcoat-3_1.fq.gz	Ari-LD-seedcoat-3_2.fq.gz
-arikara_endosperm_1	arikara_endosperm	endosperm	arikara	domesticated	1	3or4x	9_DPF	longDay	Ari-LD-endosperm-1_1.fq.gz	Ari-LD-endosperm-1_2.fq.gz
-arikara_endosperm_2	arikara_endosperm	endosperm	arikara	domesticated	2	3or4x	9_DPF	longDay	Ari-LD-endosperm-2_1.fq.gz	Ari-LD-endosperm-2_2.fq.gz
-arikara_endosperm_3	arikara_endosperm	endosperm	arikara	domesticated	3	3or4x	9_DPF	longDay	Ari-LD-endosperm-3_1.fq.gz	Ari-LD-endosperm-3_2.fq.gz
-arikara_earlyBudding_16	arikara_earlyBudding	earlyBudding	arikara	domesticated	16	no	R1	longDay	Ari-R1-16_1.fq.gz	Ari-R1-16_2.fq.gz
-arikara_earlyBudding_50	arikara_earlyBudding	earlyBudding	arikara	domesticated	50	no	R1	longDay	Ari-R1-50_1.fq.gz	Ari-R1-50_2.fq.gz
-arikara_earlyBudding_55	arikara_earlyBudding	earlyBudding	arikara	domesticated	55	no	R1	longDay	Ari-R1-55_1.fq.gz	Ari-R1-55_2.fq.gz
-arikara_lateBudding_1	arikara_lateBudding	lateBudding	arikara	domesticated	1	no	R1plus5	longDay	Ari-LD-R1plus5-1_1.fq.gz	Ari-LD-R1plus5-1_2.fq.gz
-arikara_lateBudding_32	arikara_lateBudding	lateBudding	arikara	domesticated	32	no	R1plus5	longDay	Ari-R1plus5-32_1.fq.gz	Ari-R1plus5-32_2.fq.gz
-arikara_lateBudding_47	arikara_lateBudding	lateBudding	arikara	domesticated	47	no	R1plus5	longDay	Ari-R1plus5-47_1.fq.gz	Ari-R1plus5-47_2.fq.gz
-arikara_lateBudding_6	arikara_lateBudding	lateBudding	arikara	domesticated	6	no	R1plus5	longDay	Ari-R1plus5-6_1.fq.gz	Ari-R1plus5-6_2.fq.gz
-nebraska_leaf_1	nebraska_leaf	leaf	nebraska	wild	1	no	20_DAP	longDay	NB-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090777_1.fq.gz	NB-LD-Leaf-1_FCC5FTNACXX_L2_CHKPEI14090777_2.fq.gz
-nebraska_leaf_2	nebraska_leaf	leaf	nebraska	wild	2	no	20_DAP	longDay	NB-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090778_1.fq.gz	NB-LD-Leaf-2_FCC5FTNACXX_L2_CHKPEI14090778_2.fq.gz
-nebraska_leaf_3	nebraska_leaf	leaf	nebraska	wild	3	no	20_DAP	longDay	NB-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090779_1.fq.gz	NB-LD-Leaf-3_FCC5FTNACXX_L2_CHKPEI14090779_2.fq.gz
-nebraska_meristem_1	nebraska_meristem	meristem	nebraska	wild	1	no	20_DAP	longDay	NB-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090789_1.fq.gz	NB-LD-meristem-1_FCC5FUJACXX_L2_CHKPEI14090789_2.fq.gz
-nebraska_meristem_2	nebraska_meristem	meristem	nebraska	wild	2	no	20_DAP	longDay	NB-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090790_1.fq.gz	NB-LD-meristem-2_FCC5FUJACXX_L2_CHKPEI14090790_2.fq.gz
-nebraska_meristem_3	nebraska_meristem	meristem	nebraska	wild	3	no	20_DAP	longDay	NB-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090791_1.fq.gz	NB-LD-meristem-3_FCC5FUJACXX_L2_CHKPEI14090791_2.fq.gz
-nebraska_node_1	nebraska_node	node	nebraska	wild	1	no	20_DAP	longDay	NB-LD-node-1_FCC5FUJACXX_L1_CHKPEI14090783_1.fq.gz	NB-LD-node-1_FCC5FUJACXX_L1_CHKPEI14090783_2.fq.gz
-nebraska_node_2	nebraska_node	node	nebraska	wild	2	no	20_DAP	longDay	NB-LD-node-2_FCC5FUJACXX_L1_CHKPEI14090784_1.fq.gz	NB-LD-node-2_FCC5FUJACXX_L1_CHKPEI14090784_2.fq.gz
-nebraska_node_3	nebraska_node	node	nebraska	wild	3	no	20_DAP	longDay	NB-LD-node-3_FCC5FUJACXX_L1_CHKPEI14090785_1.fq.gz	NB-LD-node-3_FCC5FUJACXX_L1_CHKPEI14090785_2.fq.gz
-nebraska_root_1	nebraska_root	root	nebraska	wild	1	5x	7_DAP	NA	NB-Root-1_FCC5FUJACXX_L4_CHKPEI14090798_1.fq.gz	NB-Root-1_FCC5FUJACXX_L4_CHKPEI14090798_2.fq.gz
-nebraska_root_2	nebraska_root	root	nebraska	wild	2	5x	7_DAP	NA	NB-Root-2_FCC5FUJACXX_L4_CHKPEI14090799_1.fq.gz	NB-Root-2_FCC5FUJACXX_L4_CHKPEI14090799_2.fq.gz
-nebraska_root_3	nebraska_root	root	nebraska	wild	3	5x	7_DAP	NA	NB-Root-3_FCC5FUJACXX_L4_CHKPEI14090800_1.fq.gz	NB-Root-3_FCC5FUJACXX_L4_CHKPEI14090800_2.fq.gz
-nebraska_shoot_1	nebraska_shoot	shoot	nebraska	wild	1	5x	7_DAP	NA	NB-Shoot-1_FCC5FUJACXX_L4_CHKPEI14090801_1.fq.gz	NB-Shoot-1_FCC5FUJACXX_L4_CHKPEI14090801_2.fq.gz
-nebraska_shoot_2	nebraska_shoot	shoot	nebraska	wild	2	5x	7_DAP	NA	NB-Shoot-2_FCC5FUJACXX_L4_CHKPEI14090802_1.fq.gz	NB-Shoot-2_FCC5FUJACXX_L4_CHKPEI14090802_2.fq.gz
-nebraska_shoot_3	nebraska_shoot	shoot	nebraska	wild	3	5x	7_DAP	NA	NB-Shoot-3_FCC5FUJACXX_L4_CHKPEI14090803_1.fq.gz	NB-Shoot-3_FCC5FUJACXX_L4_CHKPEI14090803_2.fq.gz
-nebraska_seedcoat_1	nebraska_seedcoat	seedcoat	nebraska	wild	1	3or4x	9_DPF	longDay	NB-LD-seedcoat-1_1.fq.gz	NB-LD-seedcoat-1_2.fq.gz
-nebraska_seedcoat_2	nebraska_seedcoat	seedcoat	nebraska	wild	2	3or4x	9_DPF	longDay	NB-LD-seedcoat-2_1.fq.gz	NB-LD-seedcoat-2_2.fq.gz
-nebraska_seedcoat_3	nebraska_seedcoat	seedcoat	nebraska	wild	3	3or4x	9_DPF	longDay	NB-LD-seedcoat-3_1.fq.gz	NB-LD-seedcoat-3_2.fq.gz
-nebraska_endosperm_1	nebraska_endosperm	endosperm	nebraska	wild	1	3or4x	9_DPF	longDay	NB-LD-endosperm-1_1.fq.gz	NB-LD-endosperm-1_2.fq.gz
-nebraska_endosperm_2	nebraska_endosperm	endosperm	nebraska	wild	2	3or4x	9_DPF	longDay	NB-LD-endosperm-2_1.fq.gz	NB-LD-endosperm-2_2.fq.gz
-nebraska_endosperm_3	nebraska_endosperm	endosperm	nebraska	wild	3	3or4x	9_DPF	longDay	NB-LD-endosperm-3_1.fq.gz	NB-LD-endosperm-3_2.fq.gz
-nebraska_earlyBudding_102	nebraska_earlyBudding	earlyBudding	nebraska	wild	102	no	R1	longDay	NB-R1-102_1.fq.gz	NB-R1-102_2.fq.gz
-nebraska_earlyBudding_114	nebraska_earlyBudding	earlyBudding	nebraska	wild	114	no	R1	longDay	NB-R1-114_1.fq.gz	NB-R1-114_2.fq.gz
-nebraska_earlyBudding_129	nebraska_earlyBudding	earlyBudding	nebraska	wild	129	no	R1	longDay	NB-R1-129_1.fq.gz	NB-R1-129_2.fq.gz
-nebraska_lateBudding_123	nebraska_lateBudding	lateBudding	nebraska	wild	123	no	R1plus5	longDay	NB-R1plus5-123_1.fq.gz	NB-R1plus5-123_2.fq.gz
-nebraska_lateBudding_76	nebraska_lateBudding	lateBudding	nebraska	wild	76	no	R1plus5	longDay	NB-R1plus5-76_1.fq.gz	NB-R1plus5-76_2.fq.gz
-nebraska_lateBudding_90	nebraska_lateBudding	lateBudding	nebraska	wild	90	no	R1plus5	longDay	NB-R1plus5-90_1.fq.gz	NB-R1plus5-90_2.fq.gz
-arkansas_shoot_1	arkansas_shoot	shoot	arkansas	wild	1	NA	7_DAP	NA	AR-shoot-1_1.fq.gz	AR-shoot-1_2.fq.gz
-arkansas_shoot_2	arkansas_shoot	shoot	arkansas	wild	2	NA	7_DAP	NA	AR-shoot-2_1.fq.gz	AR-shoot-2_2.fq.gz
-arkansas_shoot_3	arkansas_shoot	shoot	arkansas	wild	3	NA	7_DAP	NA	AR-shoot-3_1.fq.gz	AR-shoot-3_2.fq.gz
-kentucky_shoot_1	kentucky_shoot	shoot	kentucky	wild	1	NA	7_DAP	NA	KY-shoot-1_1.fq.gz	KY-shoot-1_2.fq.gz
-kentucky_shoot_2	kentucky_shoot	shoot	kentucky	wild	2	NA	7_DAP	NA	KY-shoot-2_1.fq.gz	KY-shoot-2_2.fq.gz
-kentucky_shoot_3	kentucky_shoot	shoot	kentucky	wild	3	NA	7_DAP	NA	KY-shoot-3_1.fq.gz	KY-shoot-3_2.fq.gz
-tennessee_meristem_1	tennessee_meristem	meristem	tennessee	wild	1	NA	20_DAP	longDay	TN-meristem-1_1.fq.gz	TN-meristem-1_2.fq.gz
-tennessee_meristem_2	tennessee_meristem	meristem	tennessee	wild	2	NA	20_DAP	longDay	TN-meristem-2_1.fq.gz	TN-meristem-2_2.fq.gz
-tennessee_meristem_3	tennessee_meristem	meristem	tennessee	wild	3	NA	20_DAP	longDay	TN-meristem-3_1.fq.gz	TN-meristem-3_2.fq.gz
-tennessee_node_1	tennessee_node	node	tennessee	wild	1	NA	20_DAP	longDay	TN-node-1_1.fq.gz	TN-node-1_2.fq.gz
-tennessee_node_2	tennessee_node	node	tennessee	wild	2	NA	20_DAP	longDay	TN-node-2_1.fq.gz	TN-node-2_2.fq.gz
-tennessee_node_3	tennessee_node	node	tennessee	wild	3	NA	20_DAP	longDay	TN-node-3_1.fq.gz	TN-node-3_2.fq.gz
-tennessee_shoot_1	tennessee_shoot	shoot	tennessee	wild	1	NA	7_DAP	NA	TN-shoot-1_1.fq.gz	TN-shoot-1_2.fq.gz
-tennessee_shoot_2	tennessee_shoot	shoot	tennessee	wild	2	NA	7_DAP	NA	TN-shoot-2_1.fq.gz	TN-shoot-2_2.fq.gz
-tennessee_shoot_3	tennessee_shoot	shoot	tennessee	wild	3	NA	7_DAP	NA	TN-shoot-3_1.fq.gz	TN-shoot-3_2.fq.gz
-man_meristem_1	mandan_meristem	meristem	mandan	domesticated	1	NA	20_DAP	longDay	Man-meristem-1_1.fq.gz	Man-meristem-1_2.fq.gz
-man_meristem_2	mandan_meristem	meristem	mandan	domesticated	2	NA	20_DAP	longDay	Man-meristem-2_1.fq.gz	Man-meristem-2_2.fq.gz
-man_meristem_3	mandan_meristem	meristem	mandan	domesticated	3	NA	20_DAP	longDay	Man-meristem-3_1.fq.gz	Man-meristem-3_2.fq.gz
-man_shoot_1	mandan_shoot	shoot	mandan	domesticated	1	NA	7_DAP	NA	Man-shoot-1_1.fq.gz	Man-shoot-1_2.fq.gz
-man_shoot_2	mandan_shoot	shoot	mandan	domesticated	2	NA	7_DAP	NA	Man-shoot-2_1.fq.gz	Man-shoot-2_2.fq.gz
-man_shoot_3	mandan_shoot	shoot	mandan	domesticated	3	NA	7_DAP	NA	Man-shoot-3_1.fq.gz	Man-shoot-3_2.fq.gz
-hid_shoot_1	hidatsa_shoot	shoot	hidatsa	domesticated	1	NA	7_DAP	NA	Hid-shoot-1_1.fq.gz	Hid-shoot-1_2.fq.gz
-hid_shoot_2	hidatsa_shoot	shoot	hidatsa	domesticated	2	NA	7_DAP	NA	Hid-shoot-2_1.fq.gz	Hid-shoot-2_2.fq.gz
-hid_shoot_3	hidatsa_shoot	shoot	hidatsa	domesticated	3	NA	7_DAP	NA	Hid-shoot-3_1.fq.gz	Hid-shoot-3_2.fq.gz
-hopi_shoot_1	hopi_shoot	shoot	hopi	domesticated	1	NA	7_DAP	NA	Hopi-shoot-1_1.fq.gz	Hopi-shoot-1_2.fq.gz
-hopi_shoot_2	hopi_shoot	shoot	hopi	domesticated	2	NA	7_DAP	NA	Hopi-shoot-2_1.fq.gz	Hopi-shoot-2_2.fq.gz
-hopi_shoot_3	hopi_shoot	shoot	hopi	domesticated	3	NA	7_DAP	NA	Hopi-shoot-3_1.fq.gz	Hopi-shoot-3_2.fq.gz
-sen_shoot_1	seneca_shoot	shoot	seneca	domesticated	1	NA	7_DAP	NA	Sen-shoot-1_1.fq.gz	Sen-shoot-1_2.fq.gz
-sen_shoot_2	seneca_shoot	shoot	seneca	domesticated	2	NA	7_DAP	NA	Sen-shoot-2_1.fq.gz	Sen-shoot-2_2.fq.gz
-sen_shoot_3	seneca_shoot	shoot	seneca	domesticated	3	NA	7_DAP	NA	Sen-shoot-3_1.fq.gz	Sen-shoot-3_2.fq.gz
+sample	group	tissue	accession	status	replicate	fq1	fq2
+arikara_endosperm_1	arikara_endosperm	endosperm	arikara	domesticated	1	Ari-LD-endosperm-1_1.fq.gz	Ari-LD-endosperm-1_2.fq.gz
+arikara_endosperm_2	arikara_endosperm	endosperm	arikara	domesticated	2	Ari-LD-endosperm-2_1.fq.gz	Ari-LD-endosperm-2_2.fq.gz
+arikara_endosperm_3	arikara_endosperm	endosperm	arikara	domesticated	3	Ari-LD-endosperm-3_1.fq.gz	Ari-LD-endosperm-3_2.fq.gz
+arikara_seedcoat_1	arikara_seedcoat	seedcoat	arikara	domesticated	1	Ari-LD-seedcoat-1_1.fq.gz	Ari-LD-seedcoat-1_2.fq.gz
+arikara_seedcoat_2	arikara_seedcoat	seedcoat	arikara	domesticated	2	Ari-LD-seedcoat-2_1.fq.gz	Ari-LD-seedcoat-2_2.fq.gz
+arikara_seedcoat_3	arikara_seedcoat	seedcoat	arikara	domesticated	3	Ari-LD-seedcoat-3_1.fq.gz	Ari-LD-seedcoat-3_2.fq.gz
+arikara_earlyBudding_16	arikara_earlyBudding	earlyBudding	arikara	domesticated	16	Ari-R1-16_1.fq.gz	Ari-R1-16_2.fq.gz
+arikara_earlyBudding_50	arikara_earlyBudding	earlyBudding	arikara	domesticated	50	Ari-R1-50_1.fq.gz	Ari-R1-50_2.fq.gz
+arikara_earlyBudding_55	arikara_earlyBudding	earlyBudding	arikara	domesticated	55	Ari-R1-55_1.fq.gz	Ari-R1-55_2.fq.gz
+arikara_lateBudding_1	arikara_lateBudding	lateBudding	arikara	domesticated	1	Ari-LD-R1plus5-1_1.fq.gz	Ari-LD-R1plus5-1_2.fq.gz
+arikara_lateBudding_32	arikara_lateBudding	lateBudding	arikara	domesticated	32	Ari-R1plus5-32_1.fq.gz	Ari-R1plus5-32_2.fq.gz
+arikara_lateBudding_47	arikara_lateBudding	lateBudding	arikara	domesticated	47	Ari-R1plus5-47_1.fq.gz	Ari-R1plus5-47_2.fq.gz
+arikara_lateBudding_6	arikara_lateBudding	lateBudding	arikara	domesticated	6	Ari-R1plus5-6_1.fq.gz	Ari-R1plus5-6_2.fq.gz
+arikara_leaf_1	arikara_leaf	leaf	arikara	domesticated	1	Ari-leaf-1_1.fq.gz	Ari-leaf-1_2.fq.gz
+arikara_leaf_2	arikara_leaf	leaf	arikara	domesticated	2	Ari-leaf-2_1.fq.gz	Ari-leaf-2_2.fq.gz
+arikara_leaf_3	arikara_leaf	leaf	arikara	domesticated	3	Ari-leaf-3_1.fq.gz	Ari-leaf-3_2.fq.gz
+arikara_meristem_1	arikara_meristem	meristem	arikara	domesticated	1	Ari-meristem-1_1.fq.gz	Ari-meristem-1_2.fq.gz
+arikara_meristem_2	arikara_meristem	meristem	arikara	domesticated	2	Ari-meristem-2_1.fq.gz	Ari-meristem-2_2.fq.gz
+arikara_meristem_3	arikara_meristem	meristem	arikara	domesticated	3	Ari-meristem-3_1.fq.gz	Ari-meristem-3_2.fq.gz
+arikara_node_1	arikara_node	node	arikara	domesticated	1	Ari-node-1_1.fq.gz	Ari-node-1_2.fq.gz
+arikara_node_2	arikara_node	node	arikara	domesticated	2	Ari-node-2_1.fq.gz	Ari-node-2_2.fq.gz
+arikara_node_3	arikara_node	node	arikara	domesticated	3	Ari-node-3_1.fq.gz	Ari-node-3_2.fq.gz
+arikara_root_1	arikara_root	root	arikara	domesticated	1	Ari-root-1_1.fq.gz	Ari-root-1_2.fq.gz
+arikara_root_2	arikara_root	root	arikara	domesticated	2	Ari-root-2_1.fq.gz	Ari-root-2_2.fq.gz
+arikara_root_3	arikara_root	root	arikara	domesticated	3	Ari-root-3_1.fq.gz	Ari-root-3_2.fq.gz
+arikara_shoot_1	arikara_shoot	shoot	arikara	domesticated	1	Ari-shoot-1_1.fq.gz	Ari-shoot-1_2.fq.gz
+arikara_shoot_2	arikara_shoot	shoot	arikara	domesticated	2	Ari-shoot-2_1.fq.gz	Ari-shoot-2_2.fq.gz
+arikara_shoot_3	arikara_shoot	shoot	arikara	domesticated	3	Ari-shoot-3_1.fq.gz	Ari-shoot-3_2.fq.gz
+hidatsa_shoot_1	hidatsa_shoot	shoot	hidatsa	domesticated	1	Hid-shoot-1_1.fq.gz	Hid-shoot-1_2.fq.gz
+hidatsa_shoot_2	hidatsa_shoot	shoot	hidatsa	domesticated	2	Hid-shoot-2_1.fq.gz	Hid-shoot-2_2.fq.gz
+hidatsa_shoot_3	hidatsa_shoot	shoot	hidatsa	domesticated	3	Hid-shoot-3_1.fq.gz	Hid-shoot-3_2.fq.gz
+hopi_shoot_1	hopi_shoot	shoot	hopi	domesticated	1	Hopi-shoot-1_1.fq.gz	Hopi-shoot-1_2.fq.gz
+hopi_shoot_2	hopi_shoot	shoot	hopi	domesticated	2	Hopi-shoot-2_1.fq.gz	Hopi-shoot-2_2.fq.gz
+hopi_shoot_3	hopi_shoot	shoot	hopi	domesticated	3	Hopi-shoot-3_1.fq.gz	Hopi-shoot-3_2.fq.gz
+mandan_meristem_1	mandan_meristem	meristem	mandan	domesticated	1	Man-meristem-1_1.fq.gz	Man-meristem-1_2.fq.gz
+mandan_meristem_2	mandan_meristem	meristem	mandan	domesticated	2	Man-meristem-2_1.fq.gz	Man-meristem-2_2.fq.gz
+mandan_meristem_3	mandan_meristem	meristem	mandan	domesticated	3	Man-meristem-3_1.fq.gz	Man-meristem-3_2.fq.gz
+mandan_node_1	mandan_node	node	mandan	domesticated	1	Man-node-1_1.fq.gz	Man-node-1_2.fq.gz
+mandan_node_2	mandan_node	node	mandan	domesticated	2	Man-node-2_1.fq.gz	Man-node-2_2.fq.gz
+mandan_node_3	mandan_node	node	mandan	domesticated	3	Man-node-3_1.fq.gz	Man-node-3_2.fq.gz
+mandan_shoot_1	mandan_shoot	shoot	mandan	domesticated	1	Man-shoot-1_1.fq.gz	Man-shoot-1_2.fq.gz
+mandan_shoot_2	mandan_shoot	shoot	mandan	domesticated	2	Man-shoot-2_1.fq.gz	Man-shoot-2_2.fq.gz
+mandan_shoot_3	mandan_shoot	shoot	mandan	domesticated	3	Man-shoot-3_1.fq.gz	Man-shoot-3_2.fq.gz
+seneca_shoot_1	seneca_shoot	shoot	seneca	domesticated	1	Sen-shoot-1_1.fq.gz	Sen-shoot-1_2.fq.gz
+seneca_shoot_2	seneca_shoot	shoot	seneca	domesticated	2	Sen-shoot-2_1.fq.gz	Sen-shoot-2_2.fq.gz
+seneca_shoot_3	seneca_shoot	shoot	seneca	domesticated	3	Sen-shoot-3_1.fq.gz	Sen-shoot-3_2.fq.gz
+nebraska_endosperm_1	nebraska_endosperm	endosperm	nebraska	wild	1	NB-LD-endosperm-1_1.fq.gz	NB-LD-endosperm-1_2.fq.gz
+nebraska_endosperm_2	nebraska_endosperm	endosperm	nebraska	wild	2	NB-LD-endosperm-2_1.fq.gz	NB-LD-endosperm-2_2.fq.gz
+nebraska_endosperm_3	nebraska_endosperm	endosperm	nebraska	wild	3	NB-LD-endosperm-3_1.fq.gz	NB-LD-endosperm-3_2.fq.gz
+nebraska_seedcoat_1	nebraska_seedcoat	seedcoat	nebraska	wild	1	NB-LD-seedcoat-1_1.fq.gz	NB-LD-seedcoat-1_2.fq.gz
+nebraska_seedcoat_2	nebraska_seedcoat	seedcoat	nebraska	wild	2	NB-LD-seedcoat-2_1.fq.gz	NB-LD-seedcoat-2_2.fq.gz
+nebraska_seedcoat_3	nebraska_seedcoat	seedcoat	nebraska	wild	3	NB-LD-seedcoat-3_1.fq.gz	NB-LD-seedcoat-3_2.fq.gz
+nebraska_earlyBudding_102	nebraska_earlyBudding	earlyBudding	nebraska	wild	102	NB-R1-102_1.fq.gz	NB-R1-102_2.fq.gz
+nebraska_earlyBudding_114	nebraska_earlyBudding	earlyBudding	nebraska	wild	114	NB-R1-114_1.fq.gz	NB-R1-114_2.fq.gz
+nebraska_earlyBudding_129	nebraska_earlyBudding	earlyBudding	nebraska	wild	129	NB-R1-129_1.fq.gz	NB-R1-129_2.fq.gz
+nebraska_lateBudding_123	nebraska_lateBudding	lateBudding	nebraska	wild	123	NB-R1plus5-123_1.fq.gz	NB-R1plus5-123_2.fq.gz
+nebraska_lateBudding_76	nebraska_lateBudding	lateBudding	nebraska	wild	76	NB-R1plus5-76_1.fq.gz	NB-R1plus5-76_2.fq.gz
+nebraska_lateBudding_90	nebraska_lateBudding	lateBudding	nebraska	wild	90	NB-R1plus5-90_1.fq.gz	NB-R1plus5-90_2.fq.gz
+nebraska_leaf_1	nebraska_leaf	leaf	nebraska	wild	1	NB-leaf-1_1.fq.gz	NB-leaf-1_2.fq.gz
+nebraska_leaf_2	nebraska_leaf	leaf	nebraska	wild	2	NB-leaf-2_1.fq.gz	NB-leaf-2_2.fq.gz
+nebraska_leaf_3	nebraska_leaf	leaf	nebraska	wild	3	NB-leaf-3_1.fq.gz	NB-leaf-3_2.fq.gz
+nebraska_meristem_1	nebraska_meristem	meristem	nebraska	wild	1	NB-meristem-1_1.fq.gz	NB-meristem-1_2.fq.gz
+nebraska_meristem_2	nebraska_meristem	meristem	nebraska	wild	2	NB-meristem-2_1.fq.gz	NB-meristem-2_2.fq.gz
+nebraska_meristem_3	nebraska_meristem	meristem	nebraska	wild	3	NB-meristem-3_1.fq.gz	NB-meristem-3_2.fq.gz
+nebraska_node_1	nebraska_node	node	nebraska	wild	1	NB-node-1_1.fq.gz	NB-node-1_2.fq.gz
+nebraska_node_2	nebraska_node	node	nebraska	wild	2	NB-node-2_1.fq.gz	NB-node-2_2.fq.gz
+nebraska_node_3	nebraska_node	node	nebraska	wild	3	NB-node-3_1.fq.gz	NB-node-3_2.fq.gz
+nebraska_root_1	nebraska_root	root	nebraska	wild	1	NB-root-1_1.fq.gz	NB-root-1_2.fq.gz
+nebraska_root_2	nebraska_root	root	nebraska	wild	2	NB-root-2_1.fq.gz	NB-root-2_2.fq.gz
+nebraska_root_3	nebraska_root	root	nebraska	wild	3	NB-root-3_1.fq.gz	NB-root-3_2.fq.gz
+nebraska_shoot_1	nebraska_shoot	shoot	nebraska	wild	1	NB-shoot-1_1.fq.gz	NB-shoot-1_2.fq.gz
+nebraska_shoot_2	nebraska_shoot	shoot	nebraska	wild	2	NB-shoot-2_1.fq.gz	NB-shoot-2_2.fq.gz
+nebraska_shoot_3	nebraska_shoot	shoot	nebraska	wild	3	NB-shoot-3_1.fq.gz	NB-shoot-3_2.fq.gz
+arkansas_shoot_1	arkansas_shoot	shoot	arkansas	wild	1	AR-shoot-1_1.fq.gz	AR-shoot-1_2.fq.gz
+arkansas_shoot_2	arkansas_shoot	shoot	arkansas	wild	2	AR-shoot-2_1.fq.gz	AR-shoot-2_2.fq.gz
+arkansas_shoot_3	arkansas_shoot	shoot	arkansas	wild	3	AR-shoot-3_1.fq.gz	AR-shoot-3_2.fq.gz
+tennessee_meristem_1	tennessee_meristem	meristem	tennessee	wild	1	TN-meristem-1_1.fq.gz	TN-meristem-1_2.fq.gz
+tennessee_meristem_2	tennessee_meristem	meristem	tennessee	wild	2	TN-meristem-2_1.fq.gz	TN-meristem-2_2.fq.gz
+tennessee_meristem_3	tennessee_meristem	meristem	tennessee	wild	3	TN-meristem-3_1.fq.gz	TN-meristem-3_2.fq.gz
+tennessee_node_1	tennessee_node	node	tennessee	wild	1	TN-node-1_1.fq.gz	TN-node-1_2.fq.gz
+tennessee_node_2	tennessee_node	node	tennessee	wild	2	TN-node-2_1.fq.gz	TN-node-2_2.fq.gz
+tennessee_node_3	tennessee_node	node	tennessee	wild	3	TN-node-3_1.fq.gz	TN-node-3_2.fq.gz
+tennessee_shoot_1	tennessee_shoot	shoot	tennessee	wild	1	TN-shoot-1_1.fq.gz	TN-shoot-1_2.fq.gz
+tennessee_shoot_2	tennessee_shoot	shoot	tennessee	wild	2	TN-shoot-2_1.fq.gz	TN-shoot-2_2.fq.gz
+tennessee_shoot_3	tennessee_shoot	shoot	tennessee	wild	3	TN-shoot-3_1.fq.gz	TN-shoot-3_2.fq.gz
+kentucky_shoot_1	kentucky_shoot	shoot	kentucky	wild	1	KY-shoot-1_1.fq.gz	KY-shoot-1_2.fq.gz
+kentucky_shoot_2	kentucky_shoot	shoot	kentucky	wild	2	KY-shoot-2_1.fq.gz	KY-shoot-2_2.fq.gz
+kentucky_shoot_3	kentucky_shoot	shoot	kentucky	wild	3	KY-shoot-3_1.fq.gz	KY-shoot-3_2.fq.gz
+missouri_shoot_1	missouri_shoot	shoot	missouri	wild	1	MO-shoot-1_1.fq.gz	MO-shoot-1_2.fq.gz
+missouri_shoot_2	missouri_shoot	shoot	missouri	wild	2	MO-shoot-2_1.fq.gz	MO-shoot-2_2.fq.gz
+missouri_shoot_3	missouri_shoot	shoot	missouri	wild	3	MO-shoot-3_1.fq.gz	MO-shoot-3_2.fq.gz
