@@ -1,0 +1,421 @@
+---
+title: "wild/domesticated sunflower RNAseq: WGCNA"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+params:
+  rmd: ""
+output:
+  html_document:
+    dev: png
+    code_folding: hide
+    self_contained: yes
+    toc: true
+    toc_depth: 5
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(vroom)
+library(tidyverse)
+library(WGCNA)
+```
+
+# Data input and cleaning
+
+```{r import_data}
+normLogCPM <- vroom("../deliverables/norm_log_cpm.tsv") %>% 
+  dplyr::mutate(gene=gsub("gene:","",gene)) %>%
+  column_to_rownames(var="gene")
+
+# reformat to wide df (rows=samples,columns=genes)
+datExpr0 <- t(normLogCPM)
+rm(normLogCPM)
+```
+
+```{r data_cleaning}
+gsg <- goodSamplesGenes(datExpr0, verbose = 3)
+
+# If the last statement returns TRUE, all genes have passed the cuts. If not, we remove the offending genes and samples from the data:
+if (!gsg$allOK){
+  # Optionally, print the gene and sample names that were removed:
+  if (sum(!gsg$goodGenes)>0)
+     printFlush(paste("Removing genes:", paste(names(datExpr0)[!gsg$goodGenes], collapse = ", ")));
+  if (sum(!gsg$goodSamples)>0)
+     printFlush(paste("Removing samples:", paste(rownames(datExpr0)[!gsg$goodSamples], collapse = ", ")));
+  # Remove the offending genes and samples from the data:
+  datExpr0 = datExpr0[gsg$goodSamples, gsg$goodGenes]
+}
+
+```
+
+```{r cluster_samples}
+sampleTree <- hclust(dist(datExpr0), method = "average")
+# Plot the sample tree: Open a graphic output window of size 12 by 9 inches
+# The user should change the dimensions if the window is too large or too small. sizeGrWindow(12,9)
+#pdf(file = "Plots/sampleClustering.pdf", width = 12, height = 9);
+par(cex = 0.6)
+par(mar = c(0,4,2,0))
+plot(sampleTree,
+     main = "Sample clustering to detect outliers",
+     sub="", xlab="", cex.lab = 1.5,cex.axis = 1.5, cex.main = 2)
+```
+It looks like there aren't any outliers, so we will continue with the dataframe as-is.
+```{r remove_outliers}
+datExpr <- datExpr0
+rm(datExpr0)
+```
+
+We now read in the trait data and match the samples for which they were measured to the expression samples
+```{r load_binarized_trait_data}
+# import metadata
+allTraits <- vroom("units.tsv") %>% 
+  # remove unneccessary columns
+  dplyr::select(sample) %>%
+  dplyr::mutate(
+    # add binary columns for accession
+    arikara=ifelse(grepl("arikara",sample),1,0),
+    hidatsa=ifelse(grepl("hidatsa",sample),1,0),
+    hopi=ifelse(grepl("hopi",sample),1,0),
+    mandan=ifelse(grepl("mandan",sample),1,0),
+    seneca=ifelse(grepl("seneca",sample),1,0),
+    nebraska=ifelse(grepl("nebraska",sample),1,0),
+    arkansas=ifelse(grepl("arkansas",sample),1,0),
+    tennessee=ifelse(grepl("tennessee",sample),1,0),
+    kentucky=ifelse(grepl("kentucky",sample),1,0),
+    missouri=ifelse(grepl("missouri",sample),1,0),
+    # add binary columns for tissue
+    endosperm=ifelse(grepl("endosperm",sample),1,0),
+    seedcoat=ifelse(grepl("seedcoat",sample),1,0),
+    earlyBudding=ifelse(grepl("earlyBudding",sample),1,0),
+    lateBudding=ifelse(grepl("lateBudding",sample),1,0),
+    leaf=ifelse(grepl("leaf",sample),1,0),
+    meristem=ifelse(grepl("meristem",sample),1,0),
+    node=ifelse(grepl("node",sample),1,0),
+    root=ifelse(grepl("root",sample),1,0),
+    shoot=ifelse(grepl("shoot",sample),1,0),
+    # add binary column for domestication
+    domestication=case_when(
+      arikara==1 | hidatsa==1 | hopi==1 | mandan==1 | seneca==1 ~ 1,
+      nebraska==1 | arkansas==1 | tennessee==1 | kentucky==1 | missouri==1 ~ 0
+    )
+  )
+
+# get sample_names in order of logCPM matrix
+sample_names <- rownames(datExpr)
+# match 
+traitRows <- match(sample_names, allTraits$sample)
+datTraits <- allTraits %>% dplyr::select(-c("sample")) %>% .[traitRows,]
+
+```
+
+We now have the expression data in the variable `datExpr`, and the corresponding clinical traits in the variable `datTraits`. Before we continue with network construction and module detection, we visualize how the clinical traits relate to the sample dendrogram.
+```{r relate_traits_to_dend,fig.width=12,fig.height=12}
+# Re-cluster samples
+sampleTree2 <- hclust(dist(datExpr), method = "average")
+# Convert traits to a color representation: white means low, red means high, grey means missing entry 
+traitColors <- numbers2colors(datTraits, signed = FALSE)
+# Plot the sample dendrogram and the colors underneath.
+
+sizeGrWindow(12,9)
+par(cex = 0.6)
+par(mar = c(0,4,2,0))
+plotDendroAndColors(sampleTree2,
+                    traitColors,
+                    groupLabels = names(datTraits),
+                    main = "Sample dendrogram and trait heatmap")
+```
+
+# One-Step Network Construction and Module Detection
+
+Constructing a weighted gene network entails the choice of the soft thresholding power β to which co-expression similarity is raised to calculate adjacency [1]. The authors of [1] have proposed to choose the soft thresholding power based on the criterion of approximate scale-free topology. We refer the reader to that work for more details; here we illustrate the use of the function pickSoftThreshold that performs the analysis of network topology and aids the user in choosing a proper soft-thresholding power. The user chooses a set of candidate powers (the function provides suitable default values), and the function returns a set of network indices that should be inspected, for example as follows:
+
+```{r choose_soft_thresholding_power}
+# Choose a set of soft-thresholding powers
+powers <- c(c(1:10), seq(from = 12, to=20, by=2))
+# Call the network topology analysis function
+sft <- pickSoftThreshold(datExpr, powerVector = powers, verbose = 5)
+```
+
+```{r plot_thresholding_power}
+# Plot the results:
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2))
+cex1 = 0.9
+
+# Scale-free topology fit index as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=cex1,col="red")
+
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.80,col="red")
+# Mean connectivity as a function of the soft-thresholding power 
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+```
+
+```{r call_modules}
+net <- blockwiseModules(datExpr,
+                        power = 7,
+                        TOMType = "signed",
+                        minModuleSize = 30,
+                        reassignThreshold = 0,
+                        mergeCutHeight = 0.25,
+                        numericLabels = TRUE,
+                        pamRespectsDendro = FALSE,
+                        saveTOMs = TRUE,
+                        saveTOMFileBase = "domesticationTOM",
+                        verbose = 3)
+```
+
+```{r show_module_contents}
+table(net$colors)
+```
+
+
+```{r plot_dend_w_modules}
+# open a graphics window
+sizeGrWindow(12, 9)
+# Convert labels to colors for plotting
+mergedColors = labels2colors(net$colors)
+# Plot the dendrogram and the module colors underneath
+plotDendroAndColors(net$dendrograms[[1]], mergedColors[net$blockGenes[[1]]],
+                  "Module colors",
+dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
+```
+
+```{r save_modules_eigengenes}
+moduleLabels <- net$colors
+moduleColors <- labels2colors(net$colors)
+MEs <- net$MEs
+geneTree <- net$dendrograms[[1]]
+```
+
+
+# Relating Modules to Trait Data
+
+```{r prepare_data_for_trait_corr}
+# Define numbers of genes and samples
+nGenes = ncol(datExpr)
+nSamples = nrow(datExpr)
+
+# Recalculate MEs with color labels
+MEs0 = moduleEigengenes(datExpr, moduleColors)$eigengenes
+MEs = orderMEs(MEs0)
+moduleTraitCor = cor(MEs, datTraits, use = "p");
+moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
+```
+
+```{r module_trait_heatmap,fig.height=20,fig.width=8}
+# Will display correlations and their p-values
+textMatrix <-  paste(signif(moduleTraitCor, 2), "\n(",
+                     signif(moduleTraitPvalue, 1), ")", sep = "");
+dim(textMatrix) <- dim(moduleTraitCor)
+
+par(mar = c(6, 8.5, 3, 3))
+# Display the correlation values within a heatmap plot 
+labeledHeatmap(Matrix = moduleTraitCor,
+               xLabels = names(datTraits),
+               yLabels = names(MEs),
+               ySymbols = names(MEs),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = textMatrix,
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("Module-trait relationships"))
+
+```
+
+```{r ME_corr_to_tibble}
+# get labeledHeatmap data for trait in tidy format
+ME.tibble <- dplyr::left_join(reshape2::melt(signif(moduleTraitCor, 2), variable.name="ME", value.name="correlation"),
+                                     reshape2::melt(signif(moduleTraitPvalue, 2), value.name="pvalue"),
+                                     by=c("Var1","Var2")) %>%
+  dplyr::rename(ME=Var1,trait=Var2) 
+
+# get top 5 hits for each trait
+ME.tophits <- ME.tibble %>% 
+  group_by(trait) %>% 
+  arrange(correlation) %>% 
+  top_n(n=5, wt= abs(correlation)) %>% 
+  arrange(trait)
+saveRDS(ME.tophits,"ME.tophits.RDS")
+```
+
+```{r }
+# Define variable weight containing the weight column of datTrait
+domestication = as.data.frame(datTraits$domestication)
+names(domestication) = "domestication"
+
+# names (colors) of the modules
+modNames <- substring(names(MEs), 3)
+geneModuleMembership <- as.data.frame(cor(datExpr, MEs, use = "p"))
+MMPvalue <- as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples))
+
+names(geneModuleMembership) <- paste("MM", modNames, sep="")
+names(MMPvalue) = paste("p.MM", modNames, sep="")
+
+geneTraitSignificance <- as.data.frame(cor(datExpr, domestication, use = "p"))
+GSPvalue <- as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+names(geneTraitSignificance) <- paste("GS.", names(domestication), sep="")
+names(GSPvalue) <- paste("p.GS.", names(domestication), sep="")
+```
+
+## Intramodular analysis: identifying genes with high Gene Significance and Module Membership
+
+Strong correlations indicate that genes highly significantly associated with a trait are often also the most important (central) elements of modules associated with the trait.
+
+```{r}
+
+res = NULL
+for (module in ME.tophits %>% dplyr::mutate(ME=gsub("ME","",ME)) %>% dplyr::filter(trait=="domestication") %>% dplyr::pull(ME)){
+
+  column = match(module, modNames)
+  moduleGenes = moduleColors==module
+
+  sizeGrWindow(7, 7)
+  par(mfrow = c(1,1))
+  
+  verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+                     abs(geneTraitSignificance[moduleGenes, 1]),
+                     xlab = paste("Module Membership in", module, "module"),
+                     ylab = "Gene significance for domestication",
+                     main = paste("Module membership vs. gene significance\n"),
+                     cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+  
+  res <- rbind(res,
+               cbind(module, names(as.data.frame(datExpr))[moduleColors==module])
+               )
+}
+
+# unique(as.data.frame(res)$module)
+
+```
+
+# Save Module Membership Results
+```{r}
+annot <- vroom("HanXRQr2.0-SUNRISE-2.1.Blast2GO-20181213.table.tsv")
+probes2annot <- match(names(as.data.frame(datExpr)), annot$SeqName)
+
+# Create the starting data frame
+geneInfo0 <- data.frame(geneID = names(as.data.frame(datExpr)),
+                       geneDescription = annot$Description[probes2annot],
+                       moduleColor = moduleColors,
+                       geneTraitSignificance,
+                       GSPvalue)
+
+# Order modules by their significance for weight
+modOrder = order(-abs(cor(MEs, domestication, use = "p")))
+
+# Add module membership information in the chosen order 
+for (mod in 1:ncol(geneModuleMembership)){
+  oldNames = names(geneInfo0)
+  geneInfo0 = data.frame(geneInfo0, geneModuleMembership[, modOrder[mod]],
+  MMPvalue[, modOrder[mod]]);
+  names(geneInfo0) = c(oldNames, paste("MM.", modNames[modOrder[mod]], sep=""),
+  paste("p.MM.", modNames[modOrder[mod]], sep=""))
+}
+# Order the genes in the geneInfo variable first by module color, then by geneTraitSignificance
+geneOrder <- order(geneInfo0$moduleColor, -abs(geneInfo0$GS.domestication)); geneInfo = geneInfo0[geneOrder, ]
+geneInfo <- geneInfo0[geneOrder, ]
+rm(geneInfo0)
+
+write_tsv(geneInfo, file= "wgcna.geneInfo.tsv")
+```
+
+```{r}
+# save entire environment load("wgcna.RData")
+save.image(file="wgcna.RData")
+# save RDS for objects used in subsequent chunks
+saveRDS(datExpr,"datExpr.RDS")
+saveRDS(moduleColors,"moduleColors.RDS")
+saveRDS(ME.tophits,"ME.tophits.RDS")
+saveRDS(net,"net.RDS")
+# clear all objects in global environment to free space
+```
+
+# Intramodular Connectivity
+
+```{r}
+library(vroom)
+library(tidyverse)
+library(WGCNA)
+```
+
+```{r readRDS_datExpr_moduleColors}
+datExpr <- readRDS("datExpr.RDS")
+moduleColors <- readRDS("moduleColors.RDS")
+ME.tophits <- readRDS("ME.tophits.RDS")
+net <- readRDS("net.RDS")
+geneInfo <- vroom::vroom("wgcna.geneInfo.tsv")
+
+```
+
+
+The function `intramodularConnectivity` computes the whole network connectivity `kTotal`, the within module connectivity `kWithin`, `kOut=kTotal-kWithin`, and `kDiff=kIn-kOut=2*kIN-kTotal`
+```{r intramodular_connectivity}
+ADJ1=abs(cor(datExpr,use="p"))^6
+#Alldegrees1=intramodularConnectivity(ADJ1, moduleColors)
+#head(Alldegrees1)
+
+ME.tophits %>% 
+  dplyr::filter(trait=="domestication") %>% 
+  dplyr::pull(ME)
+
+cor.turquoise <- datExpr[,geneInfo[,"moduleColor"]=="turquoise"]
+cor.black <- datExpr[,geneInfo[,"moduleColor"]=="black"]
+dim(cor.black)
+```
+
+```{r gene_sig_intramodular_connectivity}
+datME=moduleEigengenes(datExpr,moduleColors)$eigengene
+
+# module membership value for each gene in each module
+datKME=signedKME(datExpr, datME, outputColumnName="MM.")
+```
+
+```{r}
+hubGenes <- chooseTopHubInEachModule(datExpr = datExpr,
+                         colorh = moduleColors, 
+                         omitColors = "grey",
+                         power = 2,
+                         type = "signed"
+                         )
+
+hubGeneSignificance(datKME,
+                    GSPvalue %>% dplyr::pull(p.GS.domestication))
+# select top hub gene 
+hubGenes[ME.tophits %>%
+           dplyr::filter(trait=="domestication") %>% 
+           dplyr::pull(ME) %>% gsub("ME","",.)] %>% as.data.frame()
+
+```
+
+```{r}
+adjacency = adjacency(datExpr, power = softPower)
+```
+
+
+
+```{r}
+#load("wgcna.RData")
+save.image(file="wgcna.RData")
+```
+
+# SessionInfo
+```{r}
+sessionInfo()
+```
+

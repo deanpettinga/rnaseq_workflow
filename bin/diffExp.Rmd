@@ -29,6 +29,7 @@ knitr::opts_chunk$set(
 )
 # for knit testing in RStudio server
 #knitr::opts_knit$set(root.dir = "../")
+getwd()
 ```
 
 ```{r load_libs}
@@ -45,6 +46,9 @@ library(SummarizedExperiment)
 # library(org.Mm.eg.db)# load the org.db for your organism
 # library(org.Hs.eg.db)
 library(enrichplot)
+library(GOfuncR)
+library(circlize)
+library(ComplexHeatmap)
 ```
 
 ```{r config}
@@ -90,38 +94,153 @@ get_DE_results <- function(summarizedExperiment, tissue, contrast.group1, contra
   return(list(summarizedExperiment.wDE, DE_results))
 }
 
-plot.volcano <-function(DE_results.tissue){
-  DE_results.tissue[[2]] %>% 
-    # add significance and logFC criteria for plotting
-    dplyr::mutate(Significance = factor(case_when(
-      (FDR < 0.05) & (abs(logFC) > 1) ~ "logFC>1 & FDR<0.05",
-      (FDR > 0.05) & (abs(logFC) > 1) ~ "logFC>1 only",
-      (FDR < 0.05) & (abs(logFC) < 1) ~ "FDR<0.05 only",
-      (FDR > 0.05) & (abs(logFC) < 1) ~ "NS"),
-      levels = c("logFC>1 & FDR<0.05","logFC>1 only","FDR<0.05 only", "NS"))) %>%
-    # now ggplot
-    ggplot(.) +
-      geom_point(aes(x=logFC, y=-log10(FDR), color=Significance, label=gene)) +
-      theme_light() + ggthemes::scale_color_wsj(palette = "rgby")
+get_DE_results.allAccessions <- function(summarizedExperiment, tissue, contrast.group1, contrast.group2, logFC){
+  # setup contrast name from experimental groups (contrast.group1 is numerator, contrast.group2 is denominator)
+  contrast.name = paste0("group_",contrast.group1,"_",tissue,"_-_",contrast.group2,"_",tissue)
+  
+  # run DE with bbcRNA function findDEGs() using glmQLFTest function and logFC cutoff from config (default logFC==1)
+  summarizedExperiment.wDE = findDEGs(summarizedExperiment,
+                                     de_pkg = "edger",
+                                     test = "glmQLFTest",
+                                     design = "~0+tissueXstatus",
+                                     contrasts = list(c("tissueXstatus", paste0(contrast.group1,"_",tissue), paste0(contrast.group2,"_",tissue))),
+                                     lfc = logFC)
+
+  # get the contents from the de_results slot, removing the fit object (1st element)
+  DE_table = de_results(edger(summarizedExperiment.wDE))[-1]
+  
+  # make results data.frame with DE stats and logCPM values
+  DE_results = dplyr::left_join(
+    # get results for current contrast.name
+    edgeR::topTags(DE_table[[contrast.name]],
+                   # include all genes in results
+                   n = nrow(dgelist(edger(summarizedExperiment.wDE)))) %>%
+      as.data.frame(stringsAsFactors = FALSE) %>% 
+      rownames_to_column(var="gene"),
+    # and join logCPM values 
+    summarizedExperiment.wDE@edger@norm_cts@assays@data$norm_log_cpm %>% 
+      as.data.frame() %>% 
+      select_if(grepl(tissue, names(.))) %>% 
+      rownames_to_column(var="gene"),
+    # join by "gene" column
+    by="gene") %>%
+  # and remove prefix "gene:" from gene column
+  dplyr::mutate(gene=str_remove(gene,"gene:"))
+  
+  # return both summarizedExperiment object and DE_results data.frame in a list
+  return(list(summarizedExperiment.wDE, DE_results))
 }
 
-plot.MD <-function(DE_results.tissue){
-  DE_results.tissue[[2]] %>% 
-    # add significance and logFC criteria for plotting
+
+plot.volcano <- function(overlap){
+  # choose plotting colors
+  my.colors = c("#d95f02","#e6ab02","#a6cee3","#7570b3","#66a61e")
+  
+  df = overlap %>% 
+    # add significance and logFC criteria for plotting in different colors
     dplyr::mutate(Significance = factor(case_when(
+      (FDR < 0.05) & (abs(logFC) > 1) & (sweep_gene == TRUE) ~ "logFC>1, FDR<0.05, & Sweep Candidate",
       (FDR < 0.05) & (abs(logFC) > 1) ~ "logFC>1 & FDR<0.05",
       (FDR > 0.05) & (abs(logFC) > 1) ~ "logFC>1 only",
       (FDR < 0.05) & (abs(logFC) < 1) ~ "FDR<0.05 only",
       (FDR > 0.05) & (abs(logFC) < 1) ~ "NS"),
-      levels = c("logFC>1 & FDR<0.05","logFC>1 only","FDR<0.05 only", "NS"))) %>%
-    # now ggplot
-    ggplot(.) +
-      geom_point(aes(x=logCPM, y=logFC, color=Significance, label=gene)) +
-      theme_light() + ggthemes::scale_color_wsj(palette = "rgby")
+      levels = c("NS",
+                 "FDR<0.05 only",
+                 "logFC>1 only",
+                 "logFC>1 & FDR<0.05",
+                 "logFC>1, FDR<0.05, & Sweep Candidate")))
+  
+    # now ggplot the modified table
+    ggplot(df, aes(x=logFC, y=-log10(FDR), color=Significance)) +
+      geom_point(data = subset(df, is.na(sweep_gene)==TRUE), alpha = 0.5) +
+      geom_point(data = subset(df, is.na(sweep_gene)==FALSE), alpha = 0.5) +
+      scale_color_manual(values=my.colors) +
+      scale_fill_manual(values=my.colors) +
+      theme_light()
 }
+
+plot.MD <-function(overlap){
+  # choose plotting colors
+  my.colors = c("#d95f02","#e6ab02","#a6cee3","#7570b3","#66a61e")
+  
+  df = overlap %>% 
+    # add significance and logFC criteria for plotting in different colors
+    dplyr::mutate(Significance = factor(case_when(
+      (FDR < 0.05) & (abs(logFC) > 1) & (sweep_gene == TRUE) ~ "logFC>1, FDR<0.05, & Sweep Candidate",
+      (FDR < 0.05) & (abs(logFC) > 1) ~ "logFC>1 & FDR<0.05",
+      (FDR > 0.05) & (abs(logFC) > 1) ~ "logFC>1 only",
+      (FDR < 0.05) & (abs(logFC) < 1) ~ "FDR<0.05 only",
+      (FDR > 0.05) & (abs(logFC) < 1) ~ "NS"),
+      levels = c("logFC>1, FDR<0.05, & Sweep Candidate",
+                 "logFC>1 & FDR<0.05",
+                 "logFC>1 only",
+                 "FDR<0.05 only",
+                 "NS")))
+    
+    # now ggplot the modified table
+    ggplot(df) +
+      geom_point(data = subset(df, Significance=="NS"),
+                 aes(x=logCPM, y=logFC, color=Significance), alpha = 0.5) +
+      geom_point(data = subset(df, Significance=="logFC>1 only"),
+                 aes(x=logCPM, y=logFC, color=Significance), alpha = 0.5) +
+      geom_point(data = subset(df, Significance=="FDR<0.05 only"),
+                 aes(x=logCPM, y=logFC, color=Significance), alpha = 0.5) +
+      geom_point(data = subset(df, Significance=="logFC>1 & FDR<0.05"),
+                 aes(x=logCPM, y=logFC, color=Significance), alpha = 0.5) +
+      geom_point(data = subset(df, Significance=="logFC>1, FDR<0.05, & Sweep Candidate"),
+                 aes(x=logCPM, y=logFC, color=Significance), alpha = 0.5) +
+      scale_color_manual(values=my.colors) +
+      scale_fill_manual(values=my.colors) +
+      theme_light()
+}
+
+kable.overlap <- function(overlap){
+  knitr::kable(overlap %>% 
+               # filter only sweep genes, significant, logFC>1
+               filter(FDR < 0.05,
+                      abs(logFC) > 1,
+                      sweep_gene == TRUE) %>% 
+               # select columns 
+               dplyr::select(gene,logFC,FDR,`gene name`,`gene description`)) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+}
+
+HanXRQr2.GO = read_tsv("HanXRQr2.0-SUNRISE-2.1.Blast2GO-20181213.go_propagation.txt") %>%
+  dplyr::rename(gene=`Seq Name`, go_id=GO) %>% dplyr::select(gene,go_id) %>% as.data.frame()
+
+run_goFuncR <- function(DE_results.tissue, tissue_string){
+  go_result = GOfuncR::go_enrich(genes = DE_results.tissue[[2]] %>%
+                                   dplyr::mutate(score=-PValue) %>% 
+                                   dplyr::select(gene,score) %>%
+                                   as.data.frame(),
+                                 annotation = HanXRQr2.GO,
+                                 test="wilcoxon",
+                                 n_randsets = 1000,
+                                 silent = TRUE) %>%
+    .$results %>% dplyr::mutate(tissue=tissue_string)
+  
+  return(go_result %>% dplyr::select(tissue,everything()))
+}
+
+run_goFuncR.dom <- function(DE_results.tissue, tissue_string){
+  go_result = GOfuncR::go_enrich(genes = DE_results.tissue[[2]] %>%
+                                   dplyr::mutate(score = ifelse(abs(logFC)>1 &
+                                                                  FDR<0.05 & 
+                                                                  gene %in% domGene$`gene name1`,1,0)) %>%
+                                   dplyr::select(gene,score) %>%
+                                   as.data.frame(),
+                                 annotation = HanXRQr2.GO,
+                                 test="hyper",
+                                 n_randsets = 1000,
+                                 silent = TRUE) %>%
+    .$results %>% dplyr::mutate(tissue=tissue_string)
+  
+  return(go_result %>% dplyr::select(tissue,everything()))
+}
+
 ```
 
-## Compare References
+# Compare References
 
 ```{r}
 genes.HanXRQr2 <- read_tsv("../analysis/ref-gene-compare/HanXRQr2.0-SUNRISE-2.1.genes.tsv",col_names = "gene") %>% 
@@ -132,10 +251,6 @@ genes.arikara <- read_tsv("../analysis/ref-gene-compare/arikara.genes.tsv",col_n
 genes.nebraska <- read_tsv("../analysis/ref-gene-compare/nebraska.genes.tsv",col_names = "gene") %>% 
   dplyr::mutate(gene=str_remove(gene, pattern='";'))%>% 
   dplyr::mutate(reference="nebraska")
-
-nrow(genes.HanXRQr2)
-nrow(genes.arikara)
-nrow(genes.nebraska)
 
 nrow(dplyr::inner_join(genes.nebraska,genes.arikara, by="gene"))
 
@@ -161,14 +276,14 @@ if(config$strandedness == "unstranded"){
   star_col <- 3
 }else{stop("config$strandedness=='",config$strandedness,"'.This is an invalid value. Needs to be one of: 'unstranded','forward','reverse'")}
 
-count_matrix.nebraska <- star_to_mat(dir = "../analysis/star/nebraska/",
+count_matrix.wild <- star_to_mat(dir = "../../../../../../GoogleDrive/My Drive/aDNA-rnaseq/analysis/star/wild/",
                      rgx = "^[^_]+_[^_]+_[^\\.]+", column = star_col)
-count_matrix.arikara <- star_to_mat(dir = "../analysis/star/arikara",
+count_matrix.domesticated <- star_to_mat(dir = "../../../../../../GoogleDrive/My Drive/aDNA-rnaseq/analysis/star/domesticated/",
                      rgx = "^[^_]+_[^_]+_[^\\.]+", column = star_col)
 
 #count_matrix <- count_matrix.nebraska
-count_matrix <- dplyr::inner_join(as.data.frame(count_matrix.arikara) %>% rownames_to_column(var="gene"),
-                  as.data.frame(count_matrix.nebraska) %>% rownames_to_column(var="gene")) %>%
+count_matrix <- dplyr::inner_join(as.data.frame(count_matrix.domesticated) %>% rownames_to_column(var="gene"),
+                  as.data.frame(count_matrix.wild) %>% rownames_to_column(var="gene")) %>%
   column_to_rownames(var="gene") %>%
   as.matrix()
 
@@ -191,6 +306,7 @@ bbc_obj <- BbcSE(counts = count_matrix)
 col_meta <- read.table(here(config$units),header=T) %>%
   dplyr::select(-c(fq1,fq2)) %>%
   dplyr::distinct() %>%
+  dplyr::mutate(tissueXstatus=paste0(tissue,"_",status)) %>%
   remove_rownames() %>%
   column_to_rownames(var="sample")
 
@@ -207,8 +323,12 @@ knitr::kable(colData(bbc_obj)) %>%
 # Quality Control
 
 ```{r get_mapping_rates}
-aln_metrics <- read_star_aln_metrics(dir = "../analysis/star/",
-                                 rgx = "^[^_]+_[^_]+_[^\\.]+")
+aln_metrics <- rbind(
+  read_star_aln_metrics(dir = "../../../../../../GoogleDrive/My Drive/aDNA-rnaseq/analysis/star/domesticated/",
+                        rgx = "^[^_]+_[^_]+_[^\\.]+"),
+  read_star_aln_metrics(dir = "../../../../../../GoogleDrive/My Drive/aDNA-rnaseq/analysis/star/wild/",
+                        rgx = "^[^_]+_[^_]+_[^\\.]+")
+)
 # store the mapping metrics in the BbcSE object
 aln_metrics(bbc_obj) <- aln_metrics
 if (!validObject(bbc_obj)){
@@ -241,19 +361,13 @@ plot_aln_metrics(x = bbc_obj,
 <!-- ```{r add_gene_annotations} -->
 
 <!-- # Add gene symbols -->
-
 <!-- bbc_obj <- ens2sym(bbc_obj, org.Mm.eg.db) -->
-
 <!-- # Get Entrez IDs for gene set analyses after DE genes are identified -->
-
 <!-- bbc_obj <- ens2entrez(bbc_obj, org.Mm.eg.db) -->
-
 <!-- #rowData(bbc_obj) -->
 
 <!-- if (!validObject(bbc_obj)){ -->
-
 <!--   knitr::knit_exit("ERROR: bbc_obj was no longer valid after adding gene annotations") -->
-
 <!-- } -->
 
 <!-- ``` -->
@@ -274,22 +388,23 @@ cat("*",nrow(dgelist(edger(bbc_obj))),"features/genes assessed after trimming.")
 
 ```{r PCA}
 set.seed(100) # adonis uses permutations. Set seed to make reproducible.
-pca_plots <- plot_PCA(bbc_obj, color_by="tissue",shape_by="accession", adonis_by="tissue")
-pca_plots[[1]] #+
+pca_plots <- plot_PCA(bbc_obj, color_by="tissue", shape_by="accession")
+pca_plots[[1]] + scale_shape_manual(values = c(16,0,17,18,4,20,2,3,15,6))
   # geom_label_repel(aes(label = replicate),
   #                  box.padding   = 0.35,
   #                  point.padding = 0.5,
   #                  segment.color = 'grey50')
 pca_plots[[2]]
 
+print("replotted")
 ```
 
-```{r}
-# get the loadings
-norm_counts <- norm_cts(edger(bbc_obj))
-pca.loadings <- prcomp(t(norm_counts@assays@data$norm_log_cpm))
-pca.loadings$rotation
-```
+<!-- ```{r} -->
+<!-- # get the loadings -->
+<!-- norm_counts <- norm_cts(edger(bbc_obj)) -->
+<!-- pca.loadings <- prcomp(t(norm_counts@assays@data$norm_log_cpm)) -->
+<!-- pca.loadings$rotation -->
+<!-- ``` -->
 
 
 ```{r annotate_genes}
@@ -299,17 +414,18 @@ rowData(bbc_obj) <- data.frame(gene=rownames(bbc_obj)) %>% dplyr::mutate(gene=st
 
 # Differential Expression
 
+```{r import_domestication_genes}
+domGene <- readxl::read_excel("../raw_data/DomGeneFinalSelections.xlsx")
+```
 
 ## QC
 
-```{r}
-DE_results.test <- get_DE_results(bbc_obj, "leaf", "arikara", "nebraska", config$logfc.filter)
-```
+```{r plotBCV}
+DE_results.exploratory <- get_DE_results(bbc_obj, "leaf", "arikara", "nebraska", config$logfc.filter)
 
-```{r}
 ## Biological Coefficient of Variation
-paste("Biological Coefficient of Variation:", sqrt(DE_results.test[[1]]@edger@dgelist$common.dispersion))
-edgeR::plotBCV(DE_results.test[[1]]@edger@dgelist)
+paste("Biological Coefficient of Variation:", sqrt(DE_results.exploratory[[1]]@edger@dgelist$common.dispersion))
+edgeR::plotBCV(DE_results.exploratory[[1]]@edger@dgelist)
 
 ```
 
@@ -320,14 +436,52 @@ edgeR::plotBCV(DE_results.test[[1]]@edger@dgelist)
 DE_results.leaf <- get_DE_results(bbc_obj, "leaf", "arikara", "nebraska", config$logfc.filter)
 # write results data.frame to deliverables/
 write_tsv(DE_results.leaf[[2]], path= "../deliverables/DE-leaf.tsv")
+
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.leaf[[1]],de_method = "edger")
+
+overlap.leaf <- dplyr::left_join(DE_results.leaf[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.leaf)
+plot.volcano(overlap.leaf)
 # MD plot
-plot.MD(DE_results.leaf)
+plot.MD(overlap.leaf)
+# kable overlap
+kable.overlap(overlap.leaf)
+# just DE/sweep overlap genes
+overlap.leaf.sweep <- overlap.leaf %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.leaf.dom <- run_goFuncR.dom(DE_results.leaf,"leaf")
+```
+
+```{r fig.width=10}
+GO.leaf.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Meristem
@@ -339,12 +493,49 @@ DE_results.meristem <- get_DE_results(bbc_obj, "meristem", "arikara", "nebraska"
 write_tsv(DE_results.meristem[[2]], path= "../deliverables/DE-meristem.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.meristem[[1]],de_method = "edger")
+
+overlap.meristem <- dplyr::left_join(DE_results.meristem[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.meristem)
+plot.volcano(overlap.meristem)
 # MD plot
-plot.MD(DE_results.meristem)
+plot.MD(overlap.meristem)
+# kable overlap
+kable.overlap(overlap.meristem)
+# just DE/sweep overlap genes
+overlap.meristem.sweep <- overlap.meristem %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.meristem.dom <- run_goFuncR.dom(DE_results.meristem,"meristem")
+```
+
+```{r fig.width=10}
+GO.meristem.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Node
@@ -356,12 +547,48 @@ DE_results.node <- get_DE_results(bbc_obj, "node", "arikara", "nebraska", config
 write_tsv(DE_results.node[[2]], path= "../deliverables/DE-node.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.node[[1]],de_method = "edger")
+
+overlap.node <- dplyr::left_join(DE_results.node[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.node)
+plot.volcano(overlap.node)
 # MD plot
-plot.MD(DE_results.node)
+plot.MD(overlap.node)
+# kable overlap
+kable.overlap(overlap.node)
+# just DE/sweep overlap genes
+overlap.node.sweep <- overlap.node %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.node.dom <- run_goFuncR.dom(DE_results.node,"node")
+```
+
+```{r fig.width=10}
+GO.node.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Root
@@ -373,12 +600,48 @@ DE_results.root <- get_DE_results(bbc_obj, "root", "arikara", "nebraska", config
 write_tsv(DE_results.root[[2]], path= "../deliverables/DE-root.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.root[[1]],de_method = "edger")
+
+overlap.root <- dplyr::left_join(DE_results.root[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.root)
+plot.volcano(overlap.root)
 # MD plot
-plot.MD(DE_results.root)
+plot.MD(overlap.root)
+# kable overlap
+kable.overlap(overlap.root)
+# just DE/sweep overlap genes
+overlap.root.sweep <- overlap.root %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.root.dom <- run_goFuncR.dom(DE_results.root,"root")
+```
+
+```{r fig.width=10}
+GO.root.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Shoot
@@ -390,13 +653,50 @@ DE_results.shoot <- get_DE_results(bbc_obj, "shoot", "arikara", "nebraska", conf
 write_tsv(DE_results.shoot[[2]], path= "../deliverables/DE-shoot.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.shoot[[1]],de_method = "edger")
+
+overlap.shoot <- dplyr::left_join(DE_results.shoot[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.shoot)
+plot.volcano(overlap.shoot)
 # MD plot
-plot.MD(DE_results.shoot)
+plot.MD(overlap.shoot)
+# kable overlap
+kable.overlap(overlap.shoot)
+# just DE/sweep overlap genes
+overlap.shoot.sweep <- overlap.shoot %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
 ```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.shoot.dom <- run_goFuncR.dom(DE_results.shoot,"shoot")
+```
+
+```{r fig.width=10}
+GO.shoot.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
+```
+
 
 ## Seedcoat
 
@@ -407,12 +707,48 @@ DE_results.seedcoat <- get_DE_results(bbc_obj, "seedcoat", "arikara", "nebraska"
 write_tsv(DE_results.seedcoat[[2]], path= "../deliverables/DE-seedcoat.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.seedcoat[[1]],de_method = "edger")
+
+overlap.seedcoat <- dplyr::left_join(DE_results.seedcoat[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.seedcoat)
+plot.volcano(overlap.seedcoat)
 # MD plot
-plot.MD(DE_results.seedcoat)
+plot.MD(overlap.seedcoat)
+# kable overlap
+kable.overlap(overlap.seedcoat)
+# just DE/sweep overlap genes
+overlap.seedcoat.sweep <- overlap.seedcoat %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.seedcoat.dom <- run_goFuncR.dom(DE_results.seedcoat,"seedcoat")
+```
+
+```{r fig.width=10}
+GO.seedcoat.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Endosperm
@@ -424,12 +760,48 @@ DE_results.endosperm <- get_DE_results(bbc_obj, "endosperm", "arikara", "nebrask
 write_tsv(DE_results.endosperm[[2]], path= "../deliverables/DE-endosperm.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.endosperm[[1]],de_method = "edger")
+
+overlap.endosperm <- dplyr::left_join(DE_results.endosperm[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.endosperm)
+plot.volcano(overlap.endosperm)
 # MD plot
-plot.MD(DE_results.endosperm)
+plot.MD(overlap.endosperm)
+# kable overlap
+kable.overlap(overlap.endosperm)
+# just DE/sweep overlap genes
+overlap.endosperm.sweep <- overlap.endosperm %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.endosperm.dom <- run_goFuncR.dom(DE_results.endosperm,"endosperm")
+```
+
+```{r fig.width=10}
+GO.endosperm.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Early Budding
@@ -441,12 +813,48 @@ DE_results.earlyBudding <- get_DE_results(bbc_obj, "earlyBudding", "arikara", "n
 write_tsv(DE_results.earlyBudding[[2]], path= "../deliverables/DE-earlyBudding.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.earlyBudding[[1]],de_method = "edger")
+
+overlap.earlyBudding <- dplyr::left_join(DE_results.earlyBudding[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.earlyBudding)
+plot.volcano(overlap.earlyBudding)
 # MD plot
-plot.MD(DE_results.earlyBudding)
+plot.MD(overlap.earlyBudding)
+# kable overlap
+kable.overlap(overlap.earlyBudding)
+# just DE/sweep overlap genes
+overlap.earlyBudding.sweep <- overlap.earlyBudding %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
+```
+
+### GO: DE/Sweep Genes 
+```{r}
+GO.earlyBudding.dom <- run_goFuncR.dom(DE_results.earlyBudding,"earlyBudding")
+```
+
+```{r fig.width=10}
+GO.earlyBudding.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
 ```
 
 ## Late Budding
@@ -458,121 +866,442 @@ DE_results.lateBudding <- get_DE_results(bbc_obj, "lateBudding", "arikara", "neb
 write_tsv(DE_results.lateBudding[[2]], path= "../deliverables/DE-lateBudding.tsv")
 ```
 
+### Differential Expression
 ```{r}
 plot_pval_distrib(DE_results.lateBudding[[1]],de_method = "edger")
+
+overlap.lateBudding <- dplyr::left_join(DE_results.lateBudding[[2]],
+                                 domGene %>% 
+                                   dplyr::rename(gene=`gene name1`) %>%
+                                   dplyr::mutate(sweep_gene=TRUE),
+                                 by="gene")
 # volcano plot
-plot.volcano(DE_results.lateBudding)
+plot.volcano(overlap.lateBudding)
 # MD plot
-plot.MD(DE_results.lateBudding)
+plot.MD(overlap.lateBudding)
+# kable overlap
+kable.overlap(overlap.lateBudding)
+# just DE/sweep overlap genes
+overlap.lateBudding.sweep <- overlap.lateBudding %>% 
+  # filter only sweep genes, significant, logFC>1
+  filter(FDR < 0.05,
+         abs(logFC) > 1,
+         sweep_gene == TRUE) %>% 
+  # select columns 
+  dplyr::select(gene,`gene name`,logFC,FDR,`gene description`)
 ```
 
-## RData
+### GO: DE/Sweep Genes 
+```{r}
+GO.lateBudding.dom <- run_goFuncR.dom(DE_results.lateBudding,"lateBudding")
+```
+
+```{r fig.width=10}
+GO.lateBudding.dom %>% 
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  dplyr::group_by(ontology,tissue) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(tissue),
+             scales = "free_y")
+```
+
+# Constitutive DE genes
+```{r tissue_comparisons}
+overlap.allTissues <- plyr::join_all(list(overlap.leaf.sweep %>% dplyr::mutate(tissue="leaf"),
+       overlap.earlyBudding.sweep %>% dplyr::mutate(tissue="earlyBudding"),
+       overlap.lateBudding.sweep %>% dplyr::mutate(tissue="lateBudding"),
+       overlap.endosperm.sweep %>% dplyr::mutate(tissue="endosperm"),
+       overlap.meristem.sweep %>% dplyr::mutate(tissue="meristem"),
+       overlap.node.sweep %>% dplyr::mutate(tissue="node"),
+       overlap.root.sweep %>% dplyr::mutate(tissue="root"),
+       overlap.seedcoat.sweep %>% dplyr::mutate(tissue="seedcoat"),
+       overlap.shoot.sweep %>% dplyr::mutate(tissue="shoot")
+       ),
+  by = "gene", type = "inner")
+
+kable(overlap.allTissues[,c(1,2,5)]) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+overlap.allTissues.annotation <- overlap.allTissues[,c(1,2,5)]
+overlap.allTissues.annotation$annotation <- c("HanXRQr2_Chr13g0578191\nOVA4\n",
+                                              "HanXRQr2_Chr11g0493381\nP-loop containing nucleoside triphosphate hydrolase",
+                                              "HanXRQr2_Chr13g0578201\nZinc finger C-x8-C-x5-C-x3-H type family protein",
+                                              "HanXRQr2_Chr05g0230361\nFTSH11",
+                                              "HanXRQr2_Chr04g0160001\nGCPE;ISPG;CSB3;CLB4;HDS",
+                                              "HanXRQr2_Chr07g0311551\nLIF2",
+                                              "HanXRQr2_Chr16g0749261\nZIP10",
+                                              "HanXRQr2_Chr06g0261551\nPPDK",
+                                              "HanXRQr2_Chr09g0380251\nCPR1;CPR30")
+overlap.allTissues.annotation$ID <- c("OVA4",
+                                      "P-loop containing nucleoside triphosphate hydrolase",
+                                      "Zinc finger C-x8-C-x5-C-x3-H type family protein",
+                                      "FTSH11",
+                                      "GCPE;ISPG;CSB3;CLB4;HDS",
+                                      "LIF2",
+                                      "ZIP10",
+                                      "PPDK",
+                                      "CPR1;CPR30")
+
+rbind(overlap.leaf.sweep %>% dplyr::mutate(tissue="leaf"),
+      overlap.earlyBudding.sweep %>% dplyr::mutate(tissue="earlyBudding"),
+      overlap.lateBudding.sweep %>% dplyr::mutate(tissue="lateBudding"),
+      overlap.endosperm.sweep %>% dplyr::mutate(tissue="endosperm"),
+      overlap.meristem.sweep %>% dplyr::mutate(tissue="meristem"),
+      overlap.node.sweep %>% dplyr::mutate(tissue="node"),
+      overlap.root.sweep %>% dplyr::mutate(tissue="root"),
+      overlap.seedcoat.sweep %>% dplyr::mutate(tissue="seedcoat"),
+      overlap.shoot.sweep %>% dplyr::mutate(tissue="shoot")) %>% 
+  dplyr::left_join(overlap.allTissues.annotation[,c("gene","annotation")], by="gene") %>%
+  dplyr::filter(gene %in% overlap.allTissues.annotation$gene) %>% 
+  ggplot(aes(y=annotation,x=logFC)) +
+  geom_violin() + 
+  geom_jitter(aes(color=tissue,size=-log(FDR)), height= 0.1) +
+  theme(legend.position="left")
+```
+
+# DE Unique to Tissue
+```{r}
+overlap.all.sweep.uniq <- rbind(
+overlap.leaf.sweep %>% dplyr::mutate(tissue="leaf") %>%
+  dplyr::anti_join(overlap.earlyBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.lateBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.endosperm.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.meristem.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.node.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene"),
+
+overlap.earlyBudding.sweep %>% dplyr::mutate(tissue="earlyBudding") %>%
+  dplyr::anti_join(overlap.leaf.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.lateBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.endosperm.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.meristem.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.node.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene"),
+
+overlap.lateBudding.sweep %>% dplyr::mutate(tissue="lateBudding") %>%
+  dplyr::anti_join(overlap.leaf.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.earlyBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.endosperm.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.meristem.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.node.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene"),
+
+overlap.endosperm.sweep %>% dplyr::mutate(tissue="endosperm") %>%
+  dplyr::anti_join(overlap.leaf.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.earlyBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.lateBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.meristem.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.node.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene"),
+
+overlap.meristem.sweep %>% dplyr::mutate(tissue="meristem") %>%
+  dplyr::anti_join(overlap.leaf.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.earlyBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.lateBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.endosperm.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.node.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene"),
+
+overlap.node.sweep %>% dplyr::mutate(tissue="node") %>%
+  dplyr::anti_join(overlap.leaf.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.earlyBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.lateBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.endosperm.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.meristem.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene"),
+
+overlap.seedcoat.sweep %>% dplyr::mutate(tissue="seedcoat") %>%
+  dplyr::anti_join(overlap.leaf.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.earlyBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.lateBudding.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.endosperm.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.meristem.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.root.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.seedcoat.sweep, by="gene") %>%
+  dplyr::anti_join(overlap.shoot.sweep, by="gene")
+)
+
+# show results
+overlap.all.sweep.uniq %>% 
+  dplyr::select(tissue,everything()) %>% 
+  kable() %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+# Heatmaps
+
+## by logFC
+
+```{r}
+heatmap_data.logFC <- rbind(
+  # bind all DE results into tidy/long df
+  DE_results.earlyBudding[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="earlyBudding"),
+  DE_results.endosperm[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="endosperm"),
+  DE_results.lateBudding[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="lateBudding"),
+  DE_results.leaf[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="leaf"),
+  DE_results.meristem[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="meristem"),
+  DE_results.node[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="node"),
+  DE_results.root[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="root"),
+  DE_results.seedcoat[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="seedcoat"),
+  DE_results.shoot[[1]]@edger@de_results[[2]]$table %>% rownames_to_column(var="gene") %>% dplyr::mutate(tissue="shoot")
+  ) %>%
+  # clean up data and select important columns/genes
+  dplyr::mutate(gene=gsub("gene:","",gene)) %>%
+  dplyr::select(gene, tissue, logFC, PValue) %>%
+  dplyr::filter(gene %in% domGene$`gene name1`) %>%
+  as.tibble()
+
+# elbow plot to determine cluster number for "cutree"
+factoextra::fviz_nbclust(heatmap_data.logFC %>% 
+                           dplyr::select(-PValue) %>% 
+                           reshape2::dcast(gene ~ tissue) %>% 
+                           dplyr::select(-gene) %>% 
+                           as.matrix(),
+                         kmeans,
+                         method="wss") +
+  geom_vline(xintercept = 7, linetype = 2) # add line for better visualization
+```
+
+```{r fig.height=7}
+set.seed(1001)
+# take tidy data
+matrix.logFC <- heatmap_data.logFC %>% 
+  # select row,column, and value (logFC) and cast from tidy to wide 
+  select(gene,tissue,logFC) %>% reshape2::dcast(gene ~ tissue) %>% column_to_rownames(var="gene") %>% 
+  # convert to matrix, transpose, scale across columns, then transpose back.
+  as.matrix() %>% t() %>% scale() %>% t()
+
+# make ComplexHeatmap-----------
+# annotate constitutive genes
+matrix.logFC.rowAnno <- as.data.frame(matrix.logFC) %>% 
+  rownames_to_column(var="gene") %>% 
+  dplyr::left_join(overlap.allTissues.annotation, by="gene") %>%
+  dplyr::mutate(allTissue.DE=ifelse(ID %in% overlap.allTissues.annotation$ID,
+                                    ID,
+                                    "NA")) %>%
+  .$allTissue.DE
+heatmap.logFC <- ComplexHeatmap::Heatmap(matrix.logFC,
+                                         name = "LogFC (Z-scored)", # legend name
+                                         col = circlize::colorRamp2(c(-2, 0, 2), c("#2b83ba","#ffffbf","#d7191c")),
+                                         row_km = 7,
+                                         show_row_names = FALSE,
+                                         right_annotation = rowAnnotation(gene=matrix.logFC.rowAnno,
+                                                                          col=list(gene = c("OVA4"='#a6cee3',
+                                                                                            "P-loop containing nucleoside triphosphate hydrolase"='#1f78b4',
+                                                                                            "Zinc finger C-x8-C-x5-C-x3-H type family protein"= '#b2df8a',
+                                      "FTSH11"='#33a02c',
+                                      "GCPE;ISPG;CSB3;CLB4;HDS"='#fb9a99',
+                                      "LIF2"='#e31a1c',
+                                      "ZIP10"='#fdbf6f',
+                                      "PPDK"='#ff7f00',
+                                      "CPR1;CPR30"='#6a3d9a',
+                                      "NA"='#ffffff'))))
+
+# plot it
+heatmap.logFC <- draw(heatmap.logFC)
+
+# extract the cluster IDs
+heatmap.logFC.clusterlist <- row_order(heatmap.logFC)
+
+set.seed(1001)
+heatmap2.logFC <- ComplexHeatmap::Heatmap(matrix.logFC,
+                                         name = "LogFC (Z-scored)", # legend name
+                                         show_column_names = TRUE, show_row_names = FALSE,
+                                         col = circlize::colorRamp2(c(-2, 0, 2), c("#2b83ba","#ffffbf","#d7191c")),
+                                         row_km = 7,
+                                         top_annotation = HeatmapAnnotation(tissue = colnames(matrix.logFC),
+                                                                            col= list(tissue = c("leaf"= "#e41a1c",
+                                                                                                 "meristem" = "#377eb8",
+                                                                                                 "node" = "#4daf4a",
+                                                                                                 "root" = "#984ea3",
+                                                                                                 "shoot" = "#ff7f00",
+                                                                                                 "seedcoat" = "#ffff33",
+                                                                                                 "endosperm" ="#a65628",
+                                                                                                 "earlyBudding" ="#f781bf",
+                                                                                                 "lateBudding" ="#999999"))
+                                                                            ),
+                                         right_annotation = rowAnnotation(leaf = ifelse(rownames(matrix.logFC) %in% overlap.leaf.sweep$gene,"Sig.DE",NA),
+                                                                              meristem = ifelse(rownames(matrix.logFC) %in% overlap.meristem.sweep$gene,"Sig.DE",NA),
+                                                                              node = ifelse(rownames(matrix.logFC) %in% overlap.node.sweep$gene,"Sig.DE",NA),
+                                                                              root = ifelse(rownames(matrix.logFC) %in% overlap.root.sweep$gene,"Sig.DE",NA),
+                                                                              shoot = ifelse(rownames(matrix.logFC) %in% overlap.shoot.sweep$gene,"Sig.DE",NA),
+                                                                              seedcoat = ifelse(rownames(matrix.logFC) %in% overlap.seedcoat.sweep$gene,"Sig.DE",NA),
+                                                                              endosperm = ifelse(rownames(matrix.logFC) %in% overlap.leaf.sweep$gene,"Sig.DE",NA),
+                                                                              earlyBudding = ifelse(rownames(matrix.logFC) %in% overlap.earlyBudding.sweep$gene,"Sig.DE",NA),
+                                                                              lateBudding = ifelse(rownames(matrix.logFC) %in% overlap.lateBudding.sweep$gene,"Sig.DE",NA),
+                                                                              col = list(leaf= c("Sig.DE"="#e41a1c", "No"="white"),
+                                                                                         meristem = c("Sig.DE"="#377eb8", "No"="white"),
+                                                                                         node = c("Sig.DE"="#4daf4a", "No"="white"),
+                                                                                         root = c("Sig.DE"="#984ea3", "No"="white"),
+                                                                                         shoot = c("Sig.DE"="#ff7f00", "No"="white"),
+                                                                                         seedcoat = c("Sig.DE"="#ffff33", "No"="white"),
+                                                                                         endosperm = c("Sig.DE"="#a65628", "No"="white"),
+                                                                                         earlyBudding = c("Sig.DE"="#f781bf", "No"="white"),
+                                                                                         lateBudding = c("Sig.DE"="#999999", "No"="white"))
+                                                                          )
+                                         )
+heatmap2.logFC
+```
+
+```{r}
+# return gene cluster identities
+matrix.logFC.clusters <- NULL
+for (cluster in names(heatmap.logFC.clusterlist)){
+  matrix.logFC.clusters <- rbind(matrix.logFC.clusters,
+        matrix.logFC[heatmap.logFC.clusterlist[[cluster]],] %>% 
+          as.data.frame() %>% 
+          rownames_to_column(var="gene") %>% 
+          dplyr::mutate(cluster=cluster) %>% 
+          select(gene,cluster,everything())
+  )
+}
+
+# add description
+matrix.logFC.clusters <- matrix.logFC.clusters %>%
+  dplyr::left_join(.,domGene %>%
+                     dplyr::select(`gene name1`,`gene name`,`gene description`) %>%
+                     dplyr::rename(gene=`gene name1`),
+                   by="gene")
+
+# show cluster IDs
+DT::datatable(matrix.logFC.clusters[,c("gene","cluster","gene name","gene description")])
+```
+
+### Functional Enrichment by Cluster
+
+```{r}
+# run go_enrich for each cluster in the heatmap
+GO.clusters = NULL
+for (i in 1:length(unique(matrix.logFC.clusters$cluster))){
+  res = go_enrich(
+    # full gene list is all genes in DE testing (not trimmed for low/absent expression)
+    genes = DE_results.exploratory[[2]] %>% dplyr::select(gene) %>%
+      # positives are members of cluster 'i'
+      dplyr::mutate(hit=ifelse(gene %in% (matrix.logFC.clusters %>% dplyr::filter(cluster==i) %>% .[,"gene"]),1,0)),
+    annotation = HanXRQr2.GO,
+    test="hyper",
+    n_randsets = 1000,
+    silent = TRUE
+    ) %>%
+    .$results %>% dplyr::mutate(cluster=i)
+  # add to GO.clusters df
+  GO.clusters <- rbind(GO.clusters,res)
+}
+
+for (i in 1:length(unique(GO.clusters$cluster))){
+print(
+  GO.clusters %>% dplyr::filter(cluster==i) %>%
+  #dplyr::filter(FWER_overrep <0.05) %>%
+  dplyr::group_by(ontology,cluster) %>%
+  dplyr::slice_min(n=20, order_by=raw_p_overrep) %>%
+  dplyr::mutate(node_name = fct_reorder(node_name, dplyr::desc(raw_p_overrep))) %>%
+  dplyr::filter(ontology=="biological_process") %>%
+  ggplot(aes(y=node_name, x=raw_p_overrep, color=ontology)) +
+  geom_point() + 
+  facet_grid(rows= vars(ontology),
+             cols= vars(cluster),
+             scales = "free_y")
+  )
+}
+```
+
+<!-- ## by logCPM -->
+<!-- ```{r} -->
+<!-- # get normalized logCPM -->
+<!-- matrix.logCPM <- as.data.frame(assay(bbc_obj@edger@norm_cts)) %>%  -->
+<!--   # clean up rownames (genes) -->
+<!--   rownames_to_column(var="gene") %>% dplyr::mutate(gene=gsub("gene:","",gene)) %>%  -->
+<!--   # filter only Sweep Genes -->
+<!--   dplyr::filter(gene %in% domGene$`gene name1`) %>% -->
+<!--   #  -->
+<!--   # move gene to rownames, convert to matrix, and z-score expression by gene -->
+<!--   column_to_rownames("gene") %>% as.matrix() %>% t() %>% scale() %>% t() -->
+
+<!-- # make elbow plot to choose # kmeans clusters -->
+<!-- factoextra::fviz_nbclust(matrix.logCPM, -->
+<!--                          kmeans, -->
+<!--                          method="wss") + -->
+<!--   # looks like k=7 is pretty good, so plot line. -->
+<!--   geom_vline(xintercept = 7, linetype = 2) # add line for better visualization -->
+<!-- ``` -->
+
+<!-- ```{r fig.height=10} -->
+<!-- set.seed(101) -->
+<!-- heatmap.logCPM <- ComplexHeatmap::Heatmap(matrix.logCPM, -->
+<!--                                          name = "LogCPM (Z-scored)", # legend name -->
+<!--                                          show_column_names = FALSE, show_row_names = FALSE, -->
+<!--                                          col = circlize::colorRamp2(c(-2, 0, 2), c("#2b83ba","#ffffbf","#d7191c")), -->
+<!--                                          row_km = 10, -->
+<!--                                          # split by tissue -->
+<!--                                          column_split = stringr::str_extract_all(colnames(matrix.logCPM), "_.+_") %>% gsub("_","",.), -->
+<!--                                          top_annotation = HeatmapAnnotation(#accession = stringr::str_extract(colnames(matrix.logCPM), "[^_]+"), -->
+<!--                                                                             tissue = stringr::str_extract_all(colnames(matrix.logCPM), "_.+_") %>% gsub("_","",.), -->
+<!--                                                                             status = ifelse(stringr::str_extract(colnames(matrix.logCPM), "[^_]+") %in%  -->
+<!--                                                                                               c("arikara","hidatsa","hopi","mandan","seneca"), -->
+<!--                                                                                             "domesticated","wild"), -->
+<!--                                                                             col= list(#accession = c("arikara"="#ff7f00", "nebraska"="#377eb8"), -->
+<!--                                                                                       tissue = c("leaf"= "#e41a1c", -->
+<!--                                                                                                  "meristem" = "#377eb8", -->
+<!--                                                                                                  "node" = "#4daf4a", -->
+<!--                                                                                                  "root" = "#984ea3", -->
+<!--                                                                                                  "shoot" = "#ff7f00", -->
+<!--                                                                                                  "seedcoat" = "#ffff33", -->
+<!--                                                                                                  "endosperm" ="#a65628", -->
+<!--                                                                                                  "earlyBudding" ="#f781bf", -->
+<!--                                                                                                  "lateBudding" ="#999999"), -->
+<!--                                                                                       status = c("wild"="#7570b3", "domesticated","#ffff33")) -->
+<!--                                                                             ), -->
+<!--                                          right_annotation = rowAnnotation(leaf = ifelse(rownames(matrix.logCPM) %in% overlap.leaf.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           meristem = ifelse(rownames(matrix.logCPM) %in% overlap.meristem.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           node = ifelse(rownames(matrix.logCPM) %in% overlap.node.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           root = ifelse(rownames(matrix.logCPM) %in% overlap.root.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           shoot = ifelse(rownames(matrix.logCPM) %in% overlap.shoot.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           seedcoat = ifelse(rownames(matrix.logCPM) %in% overlap.seedcoat.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           endosperm = ifelse(rownames(matrix.logCPM) %in% overlap.leaf.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           earlyBudding = ifelse(rownames(matrix.logCPM) %in% overlap.earlyBudding.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           lateBudding = ifelse(rownames(matrix.logCPM) %in% overlap.lateBudding.sweep$gene,"Sig.DE",NA), -->
+<!--                                                                           col = list(leaf= c("Sig.DE"="#e41a1c", "No"="white"), -->
+<!--                                                                                      meristem = c("Sig.DE"="#377eb8", "No"="white"), -->
+<!--                                                                                      node = c("Sig.DE"="#4daf4a", "No"="white"), -->
+<!--                                                                                      root = c("Sig.DE"="#984ea3", "No"="white"), -->
+<!--                                                                                      shoot = c("Sig.DE"="#ff7f00", "No"="white"), -->
+<!--                                                                                      seedcoat = c("Sig.DE"="#ffff33", "No"="white"), -->
+<!--                                                                                      endosperm = c("Sig.DE"="#a65628", "No"="white"), -->
+<!--                                                                                      earlyBudding = c("Sig.DE"="#f781bf", "No"="white"), -->
+<!--                                                                                      lateBudding = c("Sig.DE"="#999999", "No"="white")) -->
+<!--                                                                           ) -->
+<!--                                          ) -->
+<!-- heatmap.logCPM -->
+
+<!-- ``` -->
+
+
+# RData
 ```{r}
 write_tsv(as.data.frame(assay(bbc_obj@edger@norm_cts)) %>% rownames_to_column(var="gene"), "../deliverables/norm_log_cpm.tsv")
+
 save.image(file = "diffExp.RData")
+#load("diffExp.RData")
 ```
 
-# testing GO analysis
-```{r}
-
-# setup Gene Ontology dataset from 
-HanXRQr2.GO = read_tsv("HanXRQr2.0-SUNRISE-2.1.Blast2GO-20181213.go_propagation.txt") %>%
-  dplyr::rename(gene=`Seq Name`, go_id=GO) %>% dplyr::select(gene,go_id) %>% as.data.frame()
-
-# initiate results tibble
-go_result.all = NULL
-
-# run go_enrich on each DE_result
-for(i in 1:length(list(DE_results.earlyBudding, 
-                        DE_results.endosperm, 
-                        DE_results.lateBudding,
-                        DE_results.leaf,
-                        DE_results.meristem,
-                        DE_results.node,
-                        DE_results.root,
-                        DE_results.seedcoat,
-                        DE_results.shoot))){
-  
-  # prepare input for go_enrich from DE_results
-  input_hyper <- DE_results.list[[i]] %>%
-    # classify significant results as "candidates" if FDR < 0.05
-    dplyr::mutate(is_candidate = dplyr::case_when(
-      (FDR < 0.05) ~ 1,
-      (FDR >= 0.05)~ 0)) %>%
-    dplyr::select(gene, is_candidate) %>% as.data.frame()
-  
-  # run GO enrichment hypergeometic test
-  go_result.i <- go_enrich(input_hyper, 
-                     test="hyper",
-                     annotation = HanXRQr2.GO)
-  go_result.i
-  # add GO result for comparison "i" to the 
-  go_result.all <- bind_rows(go_result.all, go_result.i)
-}
-
-ggplot(go.test$results, aes(x=FWER_overrep)) +
-  geom_histogram() + 
-  facet_grid(cols=vars(ontology))
-
-go.test.1 <- go.test$results %>% dplyr::mutate(tissue="endosperm")
-go.test.2 <- go.test$results %>% dplyr::mutate(tissue="meristem")
-
-ggplot(rbind(go.test.1,go.test.2), aes(x=raw_p_overrep)) +
-  geom_histogram()ggthemes::scale_color_wsj(palette = "rgby")
-```
-
-```{r}
-# DE_results.earlyBudding[[2]] %>%
-#   # sort a la GSEA: sign(FC)*-log10pvalue 
-#   # low rank= highly significant downregulated
-#   # high rank = highly significant upregulated
-#   # middle = insignificant
-#   dplyr::mutate(rank = sign(logFC)*-log10(PValue))
-
-# setup Gene Ontology dataset from 
-HanXRQr2.GO = read_tsv("HanXRQr2.0-SUNRISE-2.1.Blast2GO-20181213.go_propagation.txt") %>%
-  dplyr::rename(gene=`Seq Name`, go_id=GO) %>% dplyr::select(gene,go_id) %>% as.data.frame()
-
-# DE_results.earlyBudding, 
-# DE_results.endosperm, 
-# DE_results.lateBudding,
-# DE_results.leaf,
-# DE_results.meristem,
-# DE_results.node,
-# DE_results.root,
-# DE_results.seedcoat,
-# DE_results.shoot
-  
-run_goFuncR <- function(DE_results.tissue, tissue_string){
-  go_result = go_enrich(genes = DE_results.tissue[[2]] %>%
-                                       dplyr::mutate(score=-PValue) %>% 
-                                       dplyr::select(gene,score) %>%
-                                       as.data.frame(),
-                                       annotation = HanXRQr2.GO,
-                                       test="wilcoxon",
-                                       n_randsets = 1000) %>%
-    .$results %>% dplyr::mutate(tissue=tissue_string)
-  
-  return(go_result %>% dplyr::select(tissue,everything()))
-}
-
-GO_results <- rbind(run_goFuncR(DE_results.leaf,"leaf"),
-                    run_goFuncR(DE_results.meristem,"meristem"),
-                    run_goFuncR(DE_results.node,"node"),
-                    run_goFuncR(DE_results.root,"root"),
-                    run_goFuncR(DE_results.shoot,"shoot"),
-                    run_goFuncR(DE_results.seedcoat,"seedcoat"),
-                    run_goFuncR(DE_results.endosperm,"endosperm"),
-                    run_goFuncR(DE_results.earlyBudding,"earlyBudding"),
-                    run_goFuncR(DE_results.lateBudding,"lateBudding")
-)
-                    
-
-# go_results %>%
-#   ggplot(aes(x=raw_p_high_rank, y=raw_p_low_rank, color=ontology))
-```
-
-## SessionInfo()
+# SessionInfo()
 
 ```{r sessionInfo}
 sessionInfo()

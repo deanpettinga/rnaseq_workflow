@@ -26,6 +26,8 @@ bin/diffExp.*
 bin/.diffExp*
 bin/library*
 bin/*go_propagation*
+bin/HanXRQ*
+bin/wgcna*
 
 deliverables/*
 !deliverables/.keep
